@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openbundle"
+version = "0.1.0"
+description = "The compatibility layer for open source AI optimization tools."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "OpenBundle" }]
+keywords = ["llm", "proxy", "cache", "prompt-compression", "anthropic", "openai"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "pyyaml>=6.0.2",
+    "tiktoken>=0.8.0",
+    "typer>=0.12.0",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+mem0 = ["mem0ai>=0.1.0"]
+llmlingua = ["llmlingua>=0.2.0"]
+all = ["mem0ai>=0.1.0", "llmlingua>=0.2.0"]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+openbundle = "openbundle.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/openbundle/openbundle"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+openbundle = ["kb/*.yaml"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

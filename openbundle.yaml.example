@@ -1,0 +1,29 @@
+enabled: true            # flip with `openbundle`; OPENBUNDLE_ENABLED=false overrides
+listen: 127.0.0.1:4180   # v1 binds loopback only; --expose required for 0.0.0.0
+providers:
+  anthropic:
+    api_key: env:ANTHROPIC_API_KEY
+    base_url: https://api.anthropic.com
+  openai:
+    api_key: env:OPENAI_API_KEY
+    base_url: https://api.openai.com/v1
+bundle:
+  cache: sqlite_exact    # OpenBundle exact-hash cache (first-party, MIT)
+  memory: none           # Mem0 (github.com/mem0ai/mem0, Apache-2.0) when extra installed
+  compress: none         # LLMLingua-2 (github.com/microsoft/LLMLingua, MIT) when extra installed
+layers:
+  cache:
+    enabled: true
+    semantic: false
+  memory:
+    enabled: false
+    user_id: local
+    extract:
+      every_n_turns: 3
+      min_interval_seconds: 15
+      max_per_minute: 4
+      skip_if_user_tokens_below: 50
+  compress:
+    enabled: false
+    rate: 0.5
+    skip_cache_control: true

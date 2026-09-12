@@ -1,0 +1,37 @@
+profiles:
+  api-app:
+    bundle:
+      cache: sqlite_exact
+      memory: none
+      compress: none
+  coding-agent:
+    bundle:
+      cache: sqlite_exact
+      memory: none
+      compress: none
+  extras:
+    mem0: mem0
+    llmlingua: llmlingua2
+
+# Resolver walk order per wrap category. First compatible active tool wins.
+candidates:
+  cache:
+    - sqlite_exact
+    - gptcache
+    - lmcache
+    - vllm
+    - sglang
+  memory:
+    - mem0
+    - supermemory
+    - letta
+    - zep
+    - langmem
+    - cognee
+  compress:
+    - llmlingua2
+    - llmlingua
+    - securitylingua
+    - selective_context
+    - autocompressor
+    - recomp

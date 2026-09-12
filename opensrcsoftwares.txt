@@ -1,0 +1,256 @@
+OpenBundle — Open Source AI Agent & Optimization Tool Landscape
+A working reference of open source tools across every category OpenBundle could scan for and bundle. Organized by category. This is a research map, not a final tool-selection list — some entries are open-core (OSS engine + paid hosted layer), noted where known.
+
+1. Prompt Compression / Token Reduction
+Tool
+What it does
+LLMLingua / LongLLMLingua / LLMLingua-2 (Microsoft)
+Compresses prompts up to 20x by removing non-essential tokens using a small trained model; LongLLMLingua targets long-context/RAG; LLMLingua-2 is faster, task-agnostic, distilled from GPT-4. MIT-licensed, very active.
+SecurityLingua (Microsoft, part of LLMLingua family)
+Security-aware prompt compression that also flags jailbreak attempts.
+Selective Context
+Filters low-information-content tokens/sentences from prompts before sending to the LLM.
+AutoCompressor
+Compresses long contexts into short "summary vectors" a model can condition on.
+PCToolkit
+A unified toolkit benchmarking multiple prompt compression methods together.
+Nano-Capsulator / Gist Tokens
+Research-grade approaches that compress instructions into learned "gist" tokens.
+RECOMP
+Compresses retrieved documents (for RAG) into summaries before feeding to the LLM.
+
+2. Agent Memory (Short & Long-Term)
+Tool
+What it does
+Mem0
+Open-source (Apache 2.0) universal memory layer for AI agents — 58k+ GitHub stars, multi-level (user/session/agent) memory, self-hostable, graph memory support.
+Supermemory
+Memory/context engine, self-hostable core, MCP server and plugins (Claude Code, OpenCode, OpenClaw) are open source; SOTA on LongMemEval/LoCoMo benchmarks.
+Letta (formerly MemGPT)
+Open source framework for agents with persistent memory that manages its own context window like an OS manages memory/paging.
+Zep
+Long-term memory store for AI agents with temporal knowledge graphs; core is open source.
+LangMem
+LangChain's memory management library for agents (semantic + episodic memory patterns).
+Cognee
+Open source memory/knowledge-graph layer for AI apps, positions itself as an ECL (extract-cognify-load) pipeline for agent memory.
+MemoryBench (Supermemory)
+Open source, standardized benchmark framework to compare memory providers (Supermemory, Mem0, Zep, etc.) head to head.
+
+3. Caching (Response / Semantic)
+Tool
+What it does
+GPTCache
+Semantic caching layer for LLM apps — caches responses by meaning, not exact string match, cutting redundant API calls.
+vLLM (PagedAttention)
+Not caching in the app sense, but implements efficient KV-cache memory management at the serving layer.
+SGLang (RadixAttention)
+Automatic KV-cache reuse across requests sharing prefixes — big win for agent/multi-turn workloads.
+LMCache
+KV-cache offloading/reuse layer designed to plug into vLLM-style serving stacks.
+
+4. Quantization
+Tool
+What it does
+GGUF / llama.cpp quantization
+The format/tooling behind most local-model quantization (2-bit to 8-bit) for CPU/GPU inference.
+AutoGPTQ / GPTQ
+Post-training quantization method + library, widely used for 4-bit LLM weights.
+AutoAWQ / AWQ
+Activation-aware weight quantization — often better accuracy retention than GPTQ at similar bit-widths.
+bitsandbytes
+8-bit and 4-bit quantization library tightly integrated with Hugging Face Transformers.
+ExLlamaV2
+Fast quantized inference engine for GPU, popular for local LLM serving.
+Intel Neural Compressor
+Quantization, pruning, and distillation toolkit, Intel-hardware-optimized but framework-agnostic in places.
+NNCF (Neural Network Compression Framework)
+OpenVINO's compression toolkit — quantization, pruning, sparsity.
+HQQ (Half-Quadratic Quantization)
+Fast, calibration-free quantization method, growing adoption.
+
+5. Inference / Serving Engines
+Tool
+What it does
+vLLM
+High-throughput LLM serving engine with PagedAttention; the current default for production self-hosted serving.
+llama.cpp
+C/C++ inference engine for local/edge LLM inference (GGUF models), runs on CPU and consumer GPUs.
+Ollama
+Wraps llama.cpp with a friendly CLI/API for local model management — the "easy install" benchmark in this space.
+SGLang
+Fast serving framework with RadixAttention, popular for agent/structured-output workloads.
+TensorRT-LLM (NVIDIA)
+NVIDIA-optimized inference engine, best raw throughput on NVIDIA hardware, more complex to set up.
+Text Generation Inference (TGI) (Hugging Face)
+Production serving toolkit, integrates tightly with the HF ecosystem.
+LMDeploy
+Serving + quantization toolkit from the InternLM team, competitive throughput.
+MLC-LLM
+Compiles and runs LLMs across a very wide range of hardware backends (mobile, browser/WebGPU, edge).
+GPT4All
+Local model runner focused on consumer-hardware ease of use.
+
+6. Speculative Decoding / Speed Tricks
+Tool
+What it does
+Medusa
+Speculative decoding via multiple prediction heads to generate several tokens per forward pass.
+EAGLE / EAGLE-2
+Feature-level speculative sampling, notable speedups over vanilla speculative decoding.
+FlashAttention / FlashAttention-2/3
+Fused attention kernels that dramatically speed up and reduce memory of the attention computation itself — underlies most modern serving engines.
+MInference (Microsoft)
+Speeds up long-context prefilling (up to 10x) via sparse attention patterns.
+
+7. Fine-Tuning / PEFT
+Tool
+What it does
+PEFT (Hugging Face)
+Library implementing LoRA, QLoRA, prefix-tuning, and other parameter-efficient fine-tuning methods.
+Axolotl
+Popular config-driven fine-tuning wrapper, supports most PEFT methods and quantized training.
+LLaMA-Factory
+Broad fine-tuning toolkit with a UI, supports a huge range of base models and methods.
+Unsloth
+Fine-tuning library optimized for speed and lower VRAM use (claims 2x+ speedups on LoRA/QLoRA).
+TRL (Hugging Face)
+Reinforcement learning + SFT/DPO training library for LLMs.
+
+8. Agent Orchestration Frameworks
+Tool
+What it does
+LangChain
+The most widely used framework for chaining LLM calls, tools, and memory.
+LangGraph
+LangChain's graph-based framework for building stateful, multi-step agents.
+LlamaIndex
+Framework focused on data ingestion/indexing + RAG, also does agents.
+CrewAI
+Multi-agent orchestration framework built around role-based "crews" of agents.
+AutoGen (Microsoft)
+Multi-agent conversation framework, strong for agent-to-agent collaboration patterns.
+Semantic Kernel (Microsoft)
+Agent/orchestration SDK, strong .NET/enterprise integration story.
+Haystack (deepset)
+Production-oriented framework for RAG and agent pipelines.
+MetaGPT
+Multi-agent framework simulating a software company's roles (PM, engineer, etc.) to complete tasks.
+AutoGPT
+Early autonomous-agent project, still widely referenced/forked.
+Agno (formerly Phidata)
+Lightweight agent framework focused on speed and simplicity.
+camel-ai
+Multi-agent framework focused on agent-to-agent role-play and communication research.
+ChatDev
+Multi-agent "virtual software company" framework, similar space to MetaGPT.
+
+9. Retrieval-Augmented Generation (RAG) / Vector Stores
+Tool
+What it does
+Chroma
+Lightweight, developer-friendly open source vector database, popular default for RAG prototypes.
+Qdrant
+Production-grade open source vector database, Rust-based, strong performance.
+Weaviate
+Open source vector database with built-in hybrid search and modules.
+Milvus
+Highly scalable open source vector database, strong for large-scale production RAG.
+FAISS (Meta)
+The original fast similarity-search library most vector DBs build on or benchmark against.
+LanceDB
+Embedded vector database, designed for local-first and serverless RAG use cases.
+pgvector
+Postgres extension adding vector search — good option when you don't want a separate DB.
+txtai
+All-in-one embeddings/semantic-search/RAG toolkit.
+
+10. Model Routing / Multi-Provider Access
+Tool
+What it does
+LiteLLM
+Unified API/gateway across 100+ LLM providers, ~38.9k GitHub stars; handles fallback, retries, cost tracking.
+RouteLLM
+Routes each query to the cheapest model that can handle it, trained router models included.
+OpenRouter
+Not fully open source (hosted routing service) but frequently paired with the above for provider access.
+
+11. Evaluation / Benchmarking
+Tool
+What it does
+OpenBench (Groq)
+Provider-agnostic, open source LLM evaluation infrastructure, works across 30+ providers.
+promptfoo
+Open source prompt/LLM testing and evaluation CLI, popular for CI-integrated eval.
+DeepEval
+Open source LLM evaluation framework, "pytest for LLMs."
+RAGAS
+Evaluation framework specifically for RAG pipelines (faithfulness, relevance, etc. metrics).
+TruLens
+Evaluation and tracing library focused on RAG/agent feedback functions.
+MemoryBench
+(see Memory section) open source memory-provider benchmark.
+
+12. Guardrails / Safety / Prompt Injection Defense
+Tool
+What it does
+Guardrails AI
+Open source framework for validating/structuring LLM outputs and enforcing rules.
+NeMo Guardrails (NVIDIA)
+Programmable guardrails for conversational AI — topical, safety, and jailbreak rails.
+LLM Guard
+Open source toolkit for input/output sanitization, PII detection, prompt injection detection.
+Rebuff
+Prompt injection detection library.
+
+13. Observability / Tracing
+Tool
+What it does
+Langfuse
+Open source LLM observability/tracing platform, self-hostable.
+OpenLLMetry (Traceloop)
+Open source OpenTelemetry-based instrumentation for LLM apps.
+Phoenix (Arize)
+Open source LLM observability and evaluation tool, strong tracing UI.
+Helicone
+Open source LLM observability/logging proxy.
+
+14. Prompt Optimization
+Tool
+What it does
+DSPy (Stanford)
+Framework that programmatically optimizes prompts/weights against a metric instead of hand-tuning them.
+PromptBreeder-style tools
+Various open implementations of evolutionary prompt optimization.
+APE (Automatic Prompt Engineer)
+Early automatic prompt-generation/optimization research tool, several OSS reimplementations exist.
+
+15. Distillation / Model Compression (beyond quantization)
+Tool
+What it does
+Distil-Whisper / DistilBERT-style tooling
+Task-specific distillation recipes (mostly per-model, not general frameworks).
+Intel Neural Compressor
+(also listed under quantization) supports distillation pipelines too.
+Torch-Pruning
+General structured pruning library for PyTorch models.
+
+16. Coding-Agent-Specific Token/Context Tools
+(Emerging category — smaller, newer projects specifically optimizing token usage for coding agents like Claude Code.)
+Tool
+What it does
+Headroom
+Token-usage optimization for coding agents.
+CacheAligner
+Aligns prompts to maximize KV-cache hits for coding-agent workloads.
+Graphify
+Converts codebase context into graph form to reduce redundant context injection.
+Caveman
+Another entrant attacking coding-agent token overhead.
+
+
+Notes for OpenBundle's Knowledge Base
+License and "how open" varies a lot. Mem0 and LLMLingua are clean OSS (Apache 2.0 / MIT). Supermemory and OpenRouter are open-core or partially hosted — worth flagging clearly in the compatibility DB rather than treating "open source" as binary.
+Categories overlap. A single tool (e.g., LLMLingua) touches both prompt compression and KV-cache; vLLM touches both serving and caching. OpenBundle's compatibility matrix needs to handle tools that span categories, not force one tag per tool.
+This list is not exhaustive of the whole ecosystem — it's a strong first pass across the categories most relevant to "reduce tokens, reduce memory, speed up responses, improve quality." New entrants (especially in the coding-agent token space) are shipping weekly, which reinforces the earlier point: the compatibility knowledge base needs a maintenance process, not a one-time population.
+

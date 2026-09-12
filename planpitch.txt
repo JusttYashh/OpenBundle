@@ -1,0 +1,40 @@
+OpenBundle
+The compatibility and integration layer for open source AI optimization tools.
+
+The Problem
+Building or running an AI system today means stitching together optimizations from a dozen disconnected open source projects: quantization tools, prompt compressors, KV-cache managers, memory reducers, token-cost cutters, serving frameworks. Each does its own thing well. None of them talk to each other. Finding the right combination for your stack means hours of reading GitHub READMEs, testing compatibility by hand, and hoping nothing breaks when you stack two of them together.
+The optimization landscape isn't underpowered — it's unbundled. Most users don't need the single best prompt-compression tool that's 20% better than the alternative. They need someone to correctly pick a good one, plus a good quantizer, plus a good cache optimizer, plus a good memory reducer — and get them all working together without a week of manual integration work.
+The Idea
+OpenBundle is an agent that scans your AI stack (local inference, training pipeline, or API-based app), identifies which categories of optimization apply to you, selects a good-fit open source tool in each category, and bundles them together automatically — patching your config/code with a reviewable diff.
+Not a directory. Not a leaderboard. Not a wrapper that asks an LLM "what's best." An agent that does the actual integration work across the full breadth of the optimization landscape — prompt compression, token reduction, memory management, caching, quantization, and beyond — so the user gets a working, tuned bundle instead of a shopping list.
+Why Wide, Not Deep
+Being narrowly the best at one thing (say, prompt compression) has a low ceiling — most gains there cap out around single-digit-to-20% improvements, and users can't act on that number without also knowing what to pair it with. The real leverage is coverage: correctly identifying and wiring together a good solution in every category at once compounds those gains and removes the integration tax entirely. Most users would rather have a correctly-assembled, 80th-percentile bundle across everything than a 99th-percentile point solution in one category and nothing else.
+This also matters for going viral: "before/after" demos land hardest when the improvement touches the whole stack (speed, memory, and cost together), not one narrow metric.
+How It Works (v1 shape)
+Scan — OpenBundle inspects the user's environment: hardware, framework, existing config, and usage pattern (local inference vs. training vs. API-based app).
+Identify — It maps the environment against a maintained knowledge base of open source optimization tools, organized by category (quantization, prompt compression, token reduction, memory/context management, caching, serving).
+Select — For each applicable category, it picks a tool known to be stable and compatible with the rest of the selected bundle — prioritizing integration success over marginal performance differences between competing tools in the same category.
+Bundle & Integrate — It patches the user's actual config/code to apply the selected tools together as one coherent bundle, and shows a diff for review before anything is applied.
+Report — Before/after metrics: speed, memory, token usage, cost — so the improvement is visible, not just claimed.
+BYOK (bring your own key) powers the agent reasoning behind selection and integration logic; a maintained compatibility knowledge base (not just model training data) keeps recommendations current as the underlying tools evolve.
+Competitive Landscape
+The space is full of strong point solutions, but almost nothing does wide, auto-integrated bundling for the LLM/agent side specifically.
+Pruna AI is the closest analog and proof the thesis works: an open source framework that applies caching, pruning, quantization, and distillation together, explicitly positioned as "you cannot find a tool that aggregates all of them, makes them all easy to use and combine together." It's focused on model compression, with current emphasis on image/video generation models — not on LLM/agent app-level optimization (prompt compression, context/memory management, API token/cost reduction).
+LiteLLM unifies provider access (routing across 100+ LLM providers) but doesn't touch optimization stacking.
+LLMLingua, RouteLLM, GPTCache are strong, narrow point solutions — prompt compression, model routing, and semantic caching respectively — each solving one slice with no cross-tool integration.
+Intel Neural Compressor / OpenVINO / NNCF bundle quantization, pruning, and distillation, but are hardware-vendor-scoped (Intel) and require manual integration into your pipeline.
+Newer entrants (Headroom, CacheAligner, Graphify, Caveman) are attacking token usage specifically for coding agents, each owning one narrow slice of that problem.
+The gap OpenBundle fills: nobody is doing wide, auto-integrating, correctly-good-not-best-in-class bundling for the LLM/agent-usage side — scanning a real Ollama setup, Claude Code environment, or API-based app and patching in a coherent bundle across prompt compression, caching, memory, and token reduction at once, with a diff. Pruna validates the "bundle beats point solution" thesis; it just hasn't been built for this side of the stack yet.
+What Makes This Defensible
+Integration is the product, not discovery. Anyone can list tools. Making them work together automatically, with a diff the user can trust, is the actual hard/valuable part.
+Coverage compounds. A bundle correctly assembled across five categories beats a marginally-better tool in one category, and that compounding effect is hard to replicate with narrow point solutions.
+The compatibility knowledge is the moat. Every verified "these tools work together" pairing is proprietary-ish value that competitors would have to redo from scratch.
+Naming
+OpenBundle — describes exactly what the product does (bundles compatible open source tools together), fits the "Open-" naming lineage without colliding with existing major AI-tooling brands (OpenStack, OpenRouter, Pruna, Groq's OpenBench, GitGuardian's OpenForge, Dynatrace's OpenKit were all checked and ruled out). No active competing software project currently holds this name — the only prior "OpenBundle" was a defunct 2018 crypto/news-bundling startup with no ongoing activity, and an old game-asset pack, neither in this space. Worth a final domain/npm/PyPI availability check before committing.
+Open Questions to Pressure-Test
+First environment to support: local inference setups (Ollama/llama.cpp) vs. API-based apps (Claude/OpenAI token cost reduction) vs. training pipelines. Pick one to launch, expand from there — going wide on categories doesn't mean going wide on environments at v1.
+Compatibility verification: how much is automated (actual test runs) vs. manually curated at first — this determines how fast the knowledge base can grow and how trustworthy early recommendations are.
+Rollback story: since OpenBundle edits real configs/code, a clean "undo" needs to be as solid as the "apply" — trust depends on it.
+The Demo That Sells It
+A single command pointed at a real project. A diff. A before/after: tokens down, memory down, speed up, all in one pass. That's the GitHub README screenshot that gets stars.
+

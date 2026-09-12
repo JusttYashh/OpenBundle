@@ -1,0 +1,37 @@
+# Compatibility rules. Pipeline order is fixed; do not ask an LLM to reorder.
+order:
+  - cache
+  - memory
+  - compress
+  - provider
+
+rules:
+  - id: cache-on-original
+    text: Cache keys use original messages, never the compressed form.
+  - id: exact-hash-default
+    text: Default cache is exact-hash only. Semantic similarity requires layers.cache.semantic true.
+  - id: cache-stream-shape
+    text: Cache-hit responses must match the client stream mode (SSE vs JSON).
+  - id: memory-before-compress
+    text: Memory runs before prompt compression. Do not run two memory tools.
+  - id: never-compress-protected
+    text: Never compress tool schemas, cache_control / Anthropic prompt-cache prefixes, or document blocks.
+  - id: extract-from-original
+    text: Memory extraction uses the original conversation and is rate-limited.
+  - id: one-per-category
+    text: Each category has at most one active adapter.
+  - id: fail-open
+    text: Layers fail-open on timeout, import, or error.
+  - id: provider-errors-passthrough
+    text: Provider HTTP and mid-stream errors pass through unchanged. Failed turns are not cached and do not extract.
+
+conflicts:
+  - [mem0, supermemory]
+  - [mem0, letta]
+  - [llmlingua2, selective_context]
+
+skip_compression_on:
+  - tools
+  - cache_control
+  - document
+  - thinking

@@ -1,0 +1,317 @@
+# Landscape catalog. status: active = wired in v1; mapped = known, not integrated.
+last_verified: 2026-09-09
+tools:
+  - id: sqlite_exact
+    name: OpenBundle exact-hash cache
+    categories: [caching]
+    license: MIT
+    how_open: oss
+    status: active
+    adapter: openbundle.adapters.sqlite_cache
+    extra: null
+    credit_line: OpenBundle exact-hash cache (first-party, MIT)
+  - id: gptcache
+    name: GPTCache
+    categories: [caching]
+    license: MIT
+    how_open: oss
+    status: mapped
+    url: https://github.com/zilliztech/GPTCache
+    credit_line: GPTCache (github.com/zilliztech/GPTCache, MIT)
+    notes: Category namesake; aging. Semantic cache is opt-in first-party instead.
+  - id: llmlingua2
+    name: LLMLingua-2
+    categories: [prompt_compression]
+    license: MIT
+    how_open: oss
+    status: active
+    extra: llmlingua
+    adapter: openbundle.adapters.llmlingua2
+    url: https://github.com/microsoft/LLMLingua
+    credit_line: LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)
+  - id: llmlingua
+    name: LLMLingua / LongLLMLingua
+    categories: [prompt_compression]
+    license: MIT
+    how_open: oss
+    status: mapped
+    url: https://github.com/microsoft/LLMLingua
+    credit_line: LLMLingua / LongLLMLingua (github.com/microsoft/LLMLingua, MIT)
+  - id: securitylingua
+    name: SecurityLingua
+    categories: [prompt_compression, guardrails]
+    license: MIT
+    how_open: oss
+    status: mapped
+    url: https://github.com/microsoft/LLMLingua
+    credit_line: SecurityLingua (github.com/microsoft/LLMLingua, MIT)
+  - id: selective_context
+    name: Selective Context
+    categories: [prompt_compression]
+    license: MIT
+    status: mapped
+    url: https://github.com/liyucheng09/Selective_Context
+    credit_line: Selective Context (github.com/liyucheng09/Selective_Context, MIT)
+  - id: autocompressor
+    name: AutoCompressor
+    categories: [prompt_compression]
+    license: MIT
+    status: mapped
+    url: https://github.com/princeton-nlp/AutoCompressors
+    credit_line: AutoCompressor (github.com/princeton-nlp/AutoCompressors, MIT)
+  - id: recomp
+    name: RECOMP
+    categories: [prompt_compression, rag]
+    license: MIT
+    status: mapped
+    url: https://github.com/stanford-futuredata/RECOMP
+    credit_line: RECOMP (github.com/stanford-futuredata/RECOMP, MIT)
+  - id: mem0
+    name: Mem0
+    categories: [agent_memory]
+    license: Apache-2.0
+    how_open: oss
+    status: active
+    extra: mem0
+    adapter: openbundle.adapters.mem0
+    url: https://github.com/mem0ai/mem0
+    credit_line: Mem0 (github.com/mem0ai/mem0, Apache-2.0)
+  - id: supermemory
+    name: Supermemory
+    categories: [agent_memory]
+    license: AGPL-3.0
+    how_open: open-core
+    status: mapped
+    url: https://github.com/supermemoryai/supermemory
+    credit_line: Supermemory (github.com/supermemoryai/supermemory, AGPL-3.0)
+  - id: letta
+    name: Letta (MemGPT)
+    categories: [agent_memory]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/letta-ai/letta
+    credit_line: Letta (github.com/letta-ai/letta, Apache-2.0)
+  - id: zep
+    name: Zep
+    categories: [agent_memory]
+    license: Apache-2.0
+    how_open: open-core
+    status: mapped
+    url: https://github.com/getzep/zep
+    credit_line: Zep (github.com/getzep/zep, Apache-2.0)
+  - id: langmem
+    name: LangMem
+    categories: [agent_memory]
+    license: MIT
+    status: mapped
+    url: https://github.com/langchain-ai/langmem
+    credit_line: LangMem (github.com/langchain-ai/langmem, MIT)
+  - id: cognee
+    name: Cognee
+    categories: [agent_memory]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/topoteretes/cognee
+    credit_line: Cognee (github.com/topoteretes/cognee, Apache-2.0)
+  - id: vllm
+    name: vLLM
+    categories: [serving, caching]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/vllm-project/vllm
+    credit_line: vLLM (github.com/vllm-project/vllm, Apache-2.0)
+  - id: sglang
+    name: SGLang
+    categories: [serving, caching]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/sgl-project/sglang
+    credit_line: SGLang (github.com/sgl-project/sglang, Apache-2.0)
+  - id: lmcache
+    name: LMCache
+    categories: [caching]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/LMCache/LMCache
+    credit_line: LMCache (github.com/LMCache/LMCache, Apache-2.0)
+  - id: gguf
+    name: GGUF / llama.cpp quantization
+    categories: [quantization]
+    license: MIT
+    status: mapped
+    url: https://github.com/ggml-org/llama.cpp
+    credit_line: GGUF / llama.cpp quantization (github.com/ggml-org/llama.cpp, MIT)
+  - id: autogptq
+    name: AutoGPTQ
+    categories: [quantization]
+    license: MIT
+    status: mapped
+    url: https://github.com/AutoGPTQ/AutoGPTQ
+    credit_line: AutoGPTQ (github.com/AutoGPTQ/AutoGPTQ, MIT)
+  - id: awq
+    name: AutoAWQ
+    categories: [quantization]
+    license: MIT
+    status: mapped
+    url: https://github.com/casper-hansen/AutoAWQ
+    credit_line: AutoAWQ (github.com/casper-hansen/AutoAWQ, MIT)
+  - id: bitsandbytes
+    name: bitsandbytes
+    categories: [quantization]
+    license: MIT
+    status: mapped
+    url: https://github.com/bitsandbytes-foundation/bitsandbytes
+    credit_line: bitsandbytes (github.com/bitsandbytes-foundation/bitsandbytes, MIT)
+  - id: ollama
+    name: Ollama
+    categories: [serving]
+    license: MIT
+    status: mapped
+    url: https://github.com/ollama/ollama
+    credit_line: Ollama (github.com/ollama/ollama, MIT)
+  - id: llamacpp
+    name: llama.cpp
+    categories: [serving]
+    license: MIT
+    status: mapped
+    url: https://github.com/ggml-org/llama.cpp
+    credit_line: llama.cpp (github.com/ggml-org/llama.cpp, MIT)
+  - id: litellm
+    name: LiteLLM
+    categories: [routing]
+    license: MIT
+    status: mapped
+    url: https://github.com/BerriAI/litellm
+    credit_line: LiteLLM (github.com/BerriAI/litellm, MIT)
+    notes: Provider routing; OpenBundle uses native Anthropic/OpenAI passthrough in v1.
+  - id: routellm
+    name: RouteLLM
+    categories: [routing]
+    license: MIT
+    status: mapped
+    url: https://github.com/lm-sys/RouteLLM
+    credit_line: RouteLLM (github.com/lm-sys/RouteLLM, MIT)
+  - id: medusa
+    name: Medusa
+    categories: [speculative_decoding]
+    license: MIT
+    status: mapped
+    url: https://github.com/FasterDecoding/Medusa
+    credit_line: Medusa (github.com/FasterDecoding/Medusa, MIT)
+  - id: eagle
+    name: EAGLE-2
+    categories: [speculative_decoding]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/SafeAILab/EAGLE
+    credit_line: EAGLE-2 (github.com/SafeAILab/EAGLE, Apache-2.0)
+  - id: flashattention
+    name: FlashAttention
+    categories: [attention]
+    license: BSD-3-Clause
+    status: mapped
+    url: https://github.com/Dao-AILab/flash-attention
+    credit_line: FlashAttention (github.com/Dao-AILab/flash-attention, BSD-3-Clause)
+  - id: minference
+    name: MInference
+    categories: [attention]
+    license: MIT
+    status: mapped
+    url: https://github.com/microsoft/MInference
+    credit_line: MInference (github.com/microsoft/MInference, MIT)
+  - id: peft
+    name: PEFT
+    categories: [fine_tuning]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/huggingface/peft
+    credit_line: PEFT (github.com/huggingface/peft, Apache-2.0)
+  - id: unsloth
+    name: Unsloth
+    categories: [fine_tuning]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/unslothai/unsloth
+    credit_line: Unsloth (github.com/unslothai/unsloth, Apache-2.0)
+  - id: langchain
+    name: LangChain
+    categories: [orchestration]
+    license: MIT
+    status: mapped
+    url: https://github.com/langchain-ai/langchain
+    credit_line: LangChain (github.com/langchain-ai/langchain, MIT)
+  - id: langgraph
+    name: LangGraph
+    categories: [orchestration]
+    license: MIT
+    status: mapped
+    url: https://github.com/langchain-ai/langgraph
+    credit_line: LangGraph (github.com/langchain-ai/langgraph, MIT)
+  - id: llamaindex
+    name: LlamaIndex
+    categories: [orchestration, rag]
+    license: MIT
+    status: mapped
+    url: https://github.com/run-llama/llama_index
+    credit_line: LlamaIndex (github.com/run-llama/llama_index, MIT)
+  - id: chroma
+    name: Chroma
+    categories: [rag]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/chroma-core/chroma
+    credit_line: Chroma (github.com/chroma-core/chroma, Apache-2.0)
+  - id: qdrant
+    name: Qdrant
+    categories: [rag]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/qdrant/qdrant
+    credit_line: Qdrant (github.com/qdrant/qdrant, Apache-2.0)
+  - id: guardrails_ai
+    name: Guardrails AI
+    categories: [guardrails]
+    license: Apache-2.0
+    status: mapped
+    url: https://github.com/guardrails-ai/guardrails
+    credit_line: Guardrails AI (github.com/guardrails-ai/guardrails, Apache-2.0)
+  - id: langfuse
+    name: Langfuse
+    categories: [observability]
+    license: MIT
+    how_open: open-core
+    status: mapped
+    url: https://github.com/langfuse/langfuse
+    credit_line: Langfuse (github.com/langfuse/langfuse, MIT)
+  - id: dspy
+    name: DSPy
+    categories: [prompt_optimization]
+    license: MIT
+    status: mapped
+    url: https://github.com/stanfordnlp/dspy
+    credit_line: DSPy (github.com/stanfordnlp/dspy, MIT)
+  - id: headroom
+    name: Headroom
+    categories: [coding_agent]
+    license: unknown
+    status: mapped
+    url: https://github.com/headroomhq/headroom
+    credit_line: Headroom (github.com/headroomhq/headroom)
+  - id: cachealigner
+    name: CacheAligner
+    categories: [coding_agent]
+    license: unknown
+    status: mapped
+    credit_line: CacheAligner
+  - id: graphify
+    name: Graphify
+    categories: [coding_agent]
+    license: unknown
+    status: mapped
+    credit_line: Graphify
+  - id: caveman
+    name: Caveman
+    categories: [coding_agent]
+    license: unknown
+    status: mapped
+    credit_line: Caveman

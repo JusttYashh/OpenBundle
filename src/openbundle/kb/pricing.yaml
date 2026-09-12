@@ -1,0 +1,30 @@
+# Per-model token prices. Every row needs source + last_verified.
+# Stale after 30 days → report prints n/a, never a quiet wrong dollar figure.
+models:
+  claude-sonnet-4-6:
+    provider: anthropic
+    input_per_mtok: 3.00
+    output_per_mtok: 15.00
+    cache_read_per_mtok: 0.30
+    source: https://docs.anthropic.com/en/docs/about-claude/pricing
+    last_verified: 2026-09-09
+    aliases:
+      - claude-sonnet-4-5
+      - claude-3-7-sonnet-latest
+      - claude-3-5-sonnet-latest
+  claude-haiku-4-5:
+    provider: anthropic
+    input_per_mtok: 1.00
+    output_per_mtok: 5.00
+    source: https://docs.anthropic.com/en/docs/about-claude/pricing
+    last_verified: 2026-09-09
+  gpt-4.1:
+    provider: openai
+    input_per_mtok: 2.00
+    output_per_mtok: 8.00
+    source: https://openai.com/api/pricing
+    last_verified: 2026-09-09
+    aliases:
+      - gpt-4.1-mini
+      - gpt-4o
+      - gpt-4o-mini
