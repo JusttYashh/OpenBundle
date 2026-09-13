@@ -9,7 +9,7 @@ from openbundle.adapters.prefix_router import PrefixRouter
 from openbundle.cli import app
 from openbundle.config import StructuredLayerConfig
 from openbundle.kb.catalog import lane_counts, load_tools
-from openbundle.kb.catalog_table import END, START, catalog_counts, render_catalog_block
+from openbundle.kb.catalog_table import END, START, catalog_counts, render_readme_summary
 from openbundle.metrics.samples import samples_path
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest, InternalResponse
@@ -159,13 +159,13 @@ def test_readme_counts_match_catalog_lanes():
     assert n_tools == lanes["wrap"] + lanes["advisory"] + lanes["catalog_only"]
     readme = Path("README.md").read_text(encoding="utf-8")
     block = readme.split(START, 1)[1].split(END, 1)[0]
-    generated = render_catalog_block()
+    generated = render_readme_summary()
     assert generated.strip() == block.strip()
-    assert f"**{n_tools}**" in block
-    assert f"**{n_cats}**" in block
+    assert f"**{n_tools} open-source tools tracked across {n_cats} categories**" in block
     assert f"{lanes['wrap']} wrap-eligible" in block
-    assert f"{lanes['advisory']} advisory" in block
+    assert f"{lanes['advisory']} advisory-only" in block
     assert f"{lanes['catalog_only']} catalog-only" in block
+    catalog_page = Path("CATALOG.md").read_text(encoding="utf-8")
     names = {
         "PCToolkit",
         "OpenRouter",
@@ -189,8 +189,8 @@ def test_readme_counts_match_catalog_lanes():
     assert " — advisory" in credits
     assert " — catalog_only" in credits
     for name in names:
-        assert name in block, name
+        assert name in catalog_page, name
         assert name in credits, name
     for tool in tools:
         assert tool.lane in {"wrap", "advisory", "catalog_only"}
-        assert tool.name in block
+        assert tool.name in catalog_page

@@ -40,7 +40,7 @@ CATEGORY_TITLES = {
 LANE_TITLES = {
     "wrap": "Wrap-eligible (proxy can run these)",
     "advisory": "Advisory only (never auto-enabled)",
-    "catalog_only": "Structurally out of scope (not wireable into a proxy)",
+    "catalog_only": "Structurally out of scope",
 }
 
 
@@ -71,6 +71,20 @@ def catalog_counts() -> tuple[int, int, int]:
     return len(tools), len(categories), active
 
 
+def render_readme_summary() -> str:
+    n_tools, n_cats, n_active = catalog_counts()
+    lanes = lane_counts()
+    return (
+        f"**{n_tools} open-source tools tracked across {n_cats} categories** — "
+        f"{lanes['wrap']} wrap-eligible (can run in the proxy), "
+        f"{lanes['advisory']} advisory-only (memory), "
+        f"{lanes['catalog_only']} catalog-only (structurally can't run in a proxy — see below). "
+        f"**{n_active} have a real, wired adapter today**; the rest are catalogued "
+        "with license and install info, open for a PR to wire in next. "
+        "Full table with links: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).\n"
+    )
+
+
 def render_catalog_block() -> str:
     tools = load_tools()
     n_tools, n_cats, n_active = catalog_counts()
@@ -86,15 +100,39 @@ def render_catalog_block() -> str:
         ),
         "",
     ]
+    lines.extend(_lane_tables("###"))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_catalog_page() -> str:
+    n_tools, n_cats, n_active = catalog_counts()
+    lanes = lane_counts()
+    lines = [
+        "# Catalog",
+        "",
+        (
+            f"OpenBundle tracks **{n_tools}** open-source tools across **{n_cats}** categories "
+            f"({lanes['wrap']} wrap-eligible, {lanes['advisory']} advisory, "
+            f"{lanes['catalog_only']} catalog-only). "
+            f"**{n_active}** have a wired adapter today."
+        ),
+        "",
+    ]
+    lines.extend(_lane_tables("##"))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _lane_tables(heading: str) -> list[str]:
+    tools = load_tools()
     by_lane: dict[str, list] = defaultdict(list)
-    seen: set[str] = set()
     for tool in tools:
         by_lane[tool.lane].append(tool)
+    lines: list[str] = []
     for lane in ("wrap", "advisory", "catalog_only"):
         rows = by_lane.get(lane) or []
         if not rows:
             continue
-        lines.append(f"### {LANE_TITLES[lane]}")
+        lines.append(f"{heading} {LANE_TITLES[lane]}")
         lines.append("")
         grouped: dict[str, list] = defaultdict(list)
         for tool in rows:
@@ -105,7 +143,8 @@ def render_catalog_block() -> str:
         for category in ordered:
             cat_rows = grouped[category]
             cat_rows.sort(key=lambda t: (0 if t.status == "active" else 1, t.name.lower()))
-            lines.append(f"#### {_title(category)}")
+            sub = "####" if heading == "###" else "###"
+            lines.append(f"{sub} {_title(category)}")
             lines.append("")
             lines.append("| Tool | License | Status |")
             lines.append("|---|---|---|")
@@ -114,13 +153,12 @@ def render_catalog_block() -> str:
                 lines.append(
                     f"| {_name_cell(tool.name, tool.url)} | {license_s} | {_status_cell(tool.status)} |"
                 )
-                seen.add(tool.id)
             lines.append("")
-    return "\n".join(lines).rstrip() + "\n"
+    return lines
 
 
 def replace_catalog_section(readme: str, block: str | None = None) -> str:
-    body = block if block is not None else render_catalog_block()
+    body = block if block is not None else render_readme_summary()
     if START not in readme or END not in readme:
         raise ValueError(f"README.md must contain {START} and {END} markers")
     before, rest = readme.split(START, 1)

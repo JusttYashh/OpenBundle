@@ -6,6 +6,7 @@ from openbundle.kb.catalog_table import (
     START,
     catalog_counts,
     render_catalog_block,
+    render_readme_summary,
     replace_catalog_section,
 )
 
@@ -41,3 +42,5 @@ def test_readme_has_markers():
     text = Path("README.md").read_text(encoding="utf-8")
     assert START in text
     assert END in text
+    assert render_readme_summary().strip() in text
+    assert Path("CATALOG.md").is_file()
