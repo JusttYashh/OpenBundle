@@ -53,8 +53,25 @@ candidates:
     - openbench
   memory:
     - mem0
+    - summary
     - supermemory
     - letta
     - zep
     - langmem
     - cognee
+  coalesce:
+    - singleflight
+    - stampede
+    - llm_batch_coalesce
+    - aiocoalesce
+  prompt_cache:
+    - prompt_cache
+    - autocache
+    - langchain_smart_cache
+  context:
+    - session_hygiene
+    - openai_agents_context_compaction
+    - context_optimizer
+    - opencode_dcp
+  batch:
+    - provider_batch

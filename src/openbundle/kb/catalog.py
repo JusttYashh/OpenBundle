@@ -9,26 +9,45 @@ from typing import Any
 
 import yaml
 
-WRAP_CATEGORIES = ("cache", "compress", "routing", "guardrails", "structured", "eval")
-ADVISORY_CATEGORIES = ("memory",)
+WRAP_CATEGORIES = (
+    "cache",
+    "coalesce",
+    "memory",
+    "context",
+    "compress",
+    "prompt_cache",
+    "routing",
+    "guardrails",
+    "structured",
+    "eval",
+)
+ADVISORY_CATEGORIES = ("batch",)
 ALL_PICK_CATEGORIES = WRAP_CATEGORIES + ADVISORY_CATEGORIES
 CATALOG_CATEGORY = {
     "cache": "caching",
+    "coalesce": "coalesce",
     "memory": "agent_memory",
+    "context": "context_management",
     "compress": "prompt_compression",
+    "prompt_cache": "prompt_caching",
     "routing": "routing",
     "guardrails": "guardrails",
     "structured": "structured_output",
     "eval": "evaluation",
+    "batch": "batch",
 }
 LAYER_DEFAULT_TOOL = {
     "cache": "sqlite_exact",
-    "memory": "mem0",
+    "coalesce": "singleflight",
+    "memory": "summary",
+    "context": "session_hygiene",
     "compress": "llmlingua2",
+    "prompt_cache": "prompt_cache",
     "routing": "prefix_router",
     "guardrails": "input_guard",
     "structured": "json_schema",
     "eval": "sample_eval",
+    "batch": "none",
 }
 INIT_SKIP_GENERIC = "no compatible tool for this setup"
 
@@ -184,9 +203,9 @@ def incompatibility(
 ) -> str | None:
     """Specific skip reason, or None if this tool can activate. Never INIT_SKIP_GENERIC."""
     if tool.lane == "catalog_only":
-        return "structurally not wireable"
+        return "not a live layer"
     if tool.lane == "advisory":
-        return "advisory only — never auto-enabled"
+        return "you add this yourself — not on the live path"
     if tool.status != "active":
         return "not wired in v1"
     if tool.extra:

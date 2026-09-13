@@ -69,6 +69,27 @@ class EvalLayerConfig(BaseModel):
     adapter: str = "sample_eval"
 
 
+class CoalesceLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "singleflight"
+
+
+class PromptCacheLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "prompt_cache"
+
+
+class ContextLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "session_hygiene"
+    window: int = 40
+
+
+class BatchLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "none"
+
+
 class LayersConfig(BaseModel):
     cache: CacheLayerConfig = Field(default_factory=CacheLayerConfig)
     memory: MemoryLayerConfig = Field(default_factory=MemoryLayerConfig)
@@ -77,16 +98,24 @@ class LayersConfig(BaseModel):
     guardrails: GuardrailsLayerConfig = Field(default_factory=GuardrailsLayerConfig)
     structured: StructuredLayerConfig = Field(default_factory=StructuredLayerConfig)
     eval: EvalLayerConfig = Field(default_factory=EvalLayerConfig)
+    coalesce: CoalesceLayerConfig = Field(default_factory=CoalesceLayerConfig)
+    prompt_cache: PromptCacheLayerConfig = Field(default_factory=PromptCacheLayerConfig)
+    context: ContextLayerConfig = Field(default_factory=ContextLayerConfig)
+    batch: BatchLayerConfig = Field(default_factory=BatchLayerConfig)
 
 
 class BundleConfig(BaseModel):
     cache: str = "sqlite_exact"
-    memory: str = "none"
+    memory: str = "summary"
     compress: str = "none"
     routing: str = "none"
     guardrails: str = "none"
     structured: str = "none"
     eval: str = "none"
+    coalesce: str = "none"
+    prompt_cache: str = "none"
+    context: str = "none"
+    batch: str = "none"
 
 
 class ProvidersConfig(BaseModel):

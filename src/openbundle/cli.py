@@ -44,7 +44,7 @@ from openbundle.kb.display import (
 from openbundle.kb.catalog import WRAP_CATEGORIES, credit_line, get_tool, incompatibility
 from openbundle.kb.select import select
 from openbundle.metrics.samples import has_samples
-from openbundle.metrics.smoke import allow_lossy_layers, smoke_check_compress
+from openbundle.metrics.smoke import allow_lossy_layers, smoke_check_compress, smoke_check_memory
 from openbundle.metrics.cost import lookup_model, stale_rows
 from openbundle.metrics.report import print_report
 from openbundle.metrics.session import SessionLog
@@ -80,21 +80,39 @@ def _write_config(output: Path, choice) -> None:
         },
         "bundle": {
             "cache": choice.cache,
+            "coalesce": choice.coalesce,
+            "memory": choice.memory,
+            "context": choice.context,
             "compress": choice.compress,
+            "prompt_cache": choice.prompt_cache,
             "routing": choice.routing,
             "guardrails": choice.guardrails,
             "structured": choice.structured,
             "eval": choice.eval,
-            "memory": "none",
+            "batch": "none",
         },
         "layers": {
             "cache": {"enabled": live.get("cache", False), "semantic": False},
+            "coalesce": {"enabled": live.get("coalesce", False), "adapter": choice.coalesce},
+            "memory": {
+                "enabled": live.get("memory", False),
+                "user_id": "local",
+                "adapter": "mem0" if choice.memory == "mem0" else "summary",
+                "extract": {
+                    "every_n_turns": 3,
+                    "min_interval_seconds": 15,
+                    "max_per_minute": 4,
+                    "skip_if_user_tokens_below": 50,
+                },
+            },
+            "context": {"enabled": live.get("context", False), "adapter": choice.context, "window": 40},
             "compress": {
                 "enabled": live.get("compress", False),
                 "rate": 0.5,
                 "skip_cache_control": True,
                 "adapter": "llmlingua2" if choice.compress == "llmlingua2" else choice.compress,
             },
+            "prompt_cache": {"enabled": live.get("prompt_cache", False), "adapter": choice.prompt_cache},
             "routing": {
                 "enabled": live.get("routing", False),
                 "adapter": choice.routing,
@@ -111,17 +129,7 @@ def _write_config(output: Path, choice) -> None:
                 "enabled": live.get("eval", False),
                 "adapter": choice.eval,
             },
-            "memory": {
-                "enabled": False,
-                "user_id": "local",
-                "adapter": "mem0",
-                "extract": {
-                    "every_n_turns": 3,
-                    "min_interval_seconds": 15,
-                    "max_per_minute": 4,
-                    "skip_if_user_tokens_below": 50,
-                },
-            },
+            "batch": {"enabled": False, "adapter": "none"},
         },
     }
     output.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
@@ -188,6 +196,10 @@ def check(
         choice.compress = "none"
         choice.live["compress"] = False
         typer.echo("compress skipped: smoke-check failed on local samples.")
+    if choice.memory == "mem0" and not smoke_check_memory(adapter="mem0"):
+        choice.memory = "summary"
+        choice.live["memory"] = True
+        typer.echo("memory: Mem0 smoke-check failed; first-party summary stays on.")
     _write_config(path, choice)
     write_credits(Path.cwd() / "CREDITS.md")
     typer.echo(format_init_summary(choice))
@@ -217,6 +229,11 @@ def init(
             if "compress" in choice.details:
                 choice.details["compress"].tool_id = "none"
                 choice.details["compress"].live = False
+        if choice.live.get("memory") and choice.memory == "mem0" and not smoke_check_memory(adapter="mem0"):
+            choice.memory = "summary"
+            if "memory" in choice.details:
+                choice.details["memory"].tool_id = "summary"
+                choice.details["memory"].live = True
     with Pulse("Writing config", show_logo=False):
         _write_config(output, choice)
         write_credits(Path.cwd() / "CREDITS.md")
@@ -250,15 +267,10 @@ def config_root(ctx: typer.Context, no_banner: bool = typer.Option(False, "--no-
     if path is None:
         scan = scan_env()
         choice = select(scan, extras)
-        active = {
-            "cache": choice.cache,
-            "compress": choice.compress,
-            "routing": choice.routing,
-            "guardrails": choice.guardrails,
-            "structured": choice.structured,
-            "eval": choice.eval,
-            "memory": "none",
-        }
+        active = {key: getattr(choice, key) for key in (
+            "cache", "coalesce", "memory", "context", "compress", "prompt_cache",
+            "routing", "guardrails", "structured", "eval", "batch",
+        )}
     else:
         active = active_from_doc(read_config_doc(path))
     typer.echo(format_config_view(extras, active=active))
@@ -266,19 +278,18 @@ def config_root(ctx: typer.Context, no_banner: bool = typer.Option(False, "--no-
 
 @config_app.command("set")
 def config_set(
-    category: str = typer.Argument(help="cache | compress | routing | guardrails | structured | eval"),
+    category: str = typer.Argument(help="cache | memory | compress | routing | …"),
     tool: str = typer.Argument(help="Tool id, or off / none"),
     no_banner: bool = typer.Option(False, "--no-banner"),
 ) -> None:
     """Swap one wrap category to a wired tool, or off."""
     _banner(no_banner, compact=True)
-    alias = {"compression": "compress", "caching": "cache"}
+    alias = {"compression": "compress", "caching": "cache", "hygiene": "context"}
     category = alias.get(category, category)
-    if category == "memory":
+    if category == "batch":
         typer.echo(
-            "Memory is advisory only — never auto-enabled. "
-            "Add Mem0 (github.com/mem0ai/mem0, Apache-2.0) in your own code: "
-            "pip install openbundle[mem0]",
+            "Batch API is not on the live path (no streaming). "
+            "Use Anthropic / OpenAI Batch for nightly or bulk jobs.",
             err=True,
         )
         raise typer.Exit(code=2)
@@ -342,6 +353,10 @@ def serve(
         settings.layers.guardrails.enabled = False
         settings.layers.structured.enabled = False
         settings.layers.eval.enabled = False
+        settings.layers.coalesce.enabled = False
+        settings.layers.prompt_cache.enabled = False
+        settings.layers.context.enabled = False
+        settings.layers.batch.enabled = False
     bind_host = host or settings.host
     bind_port = port or settings.port
     try:

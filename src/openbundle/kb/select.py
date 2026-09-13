@@ -1,4 +1,4 @@
-"""Deterministic bundle picker. Walk wrap candidates; memory stays advisory."""
+"""Deterministic bundle picker. Wrap categories go live; batch stays advisory."""
 
 from __future__ import annotations
 
@@ -38,6 +38,10 @@ class Selection:
     guardrails: str
     structured: str
     eval: str
+    coalesce: str
+    prompt_cache: str
+    context: str
+    batch: str
     profile: str
     extras: list[str]
     details: dict[str, CategoryChoice] = field(default_factory=dict)
@@ -74,23 +78,26 @@ def select(
             chosen.append(choice.tool_id)
             live[category] = go_live
 
-    # Memory is ranked for display but never live.
-    mem = _pick_category("memory", extra_set, chosen, core_only=True)
-    mem.tool_id = "none"
-    mem.live = False
-    mem.reasons.setdefault("mem0", "advisory only — never auto-enabled")
-    details["memory"] = mem
-    picked["memory"] = "none"
-    live["memory"] = False
+    batch = _pick_category("batch", extra_set, chosen, core_only=True)
+    batch.tool_id = picked.get("batch") or "provider_batch"
+    batch.live = False
+    batch.reasons.setdefault("provider_batch", "you add this yourself — not on the live path")
+    details["batch"] = batch
+    picked["batch"] = "none"
+    live["batch"] = False
 
     return Selection(
         cache=picked["cache"],
-        memory="none",
+        memory=picked["memory"],
         compress=picked["compress"],
         routing=picked["routing"],
         guardrails=picked["guardrails"],
         structured=picked["structured"],
         eval=picked["eval"],
+        coalesce=picked["coalesce"],
+        prompt_cache=picked["prompt_cache"],
+        context=picked["context"],
+        batch="none",
         profile=profile,
         extras=list(found),
         details=details,
@@ -143,7 +150,7 @@ def explain_category(
     rows: list[tuple[Tool, str | None]] = []
     for tool in tools_in_category(category):
         if category in ADVISORY_CATEGORIES:
-            rows.append((tool, "advisory only — never auto-enabled"))
+            rows.append((tool, "you add this yourself — not on the live path"))
             continue
         rows.append((tool, incompatibility(tool, extra_set, taken, core_only=core_only)))
     return rows

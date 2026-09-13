@@ -6,200 +6,242 @@ or not it is active on this machine.
 
 Also at: https://openbundle.dev/credits
 
-- OpenBundle exact-hash cache — MIT — wrap
+- OpenBundle exact-hash cache — MIT
   OpenBundle exact-hash cache (first-party, MIT)
 
-- [GPTCache](https://github.com/zilliztech/GPTCache) — MIT — wrap
+- [GPTCache](https://github.com/zilliztech/GPTCache) — MIT
   GPTCache (github.com/zilliztech/GPTCache, MIT)
 
-- [LLMLingua-2](https://github.com/microsoft/LLMLingua) — MIT — wrap
+- [LLMLingua-2](https://github.com/microsoft/LLMLingua) — MIT
   LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)
 
-- [LLMLingua / LongLLMLingua](https://github.com/microsoft/LLMLingua) — MIT — wrap
+- [LLMLingua / LongLLMLingua](https://github.com/microsoft/LLMLingua) — MIT
   LLMLingua / LongLLMLingua (github.com/microsoft/LLMLingua, MIT)
 
-- [SecurityLingua](https://github.com/microsoft/LLMLingua) — MIT — wrap
+- [SecurityLingua](https://github.com/microsoft/LLMLingua) — MIT
   SecurityLingua (github.com/microsoft/LLMLingua, MIT)
 
-- [Selective Context](https://github.com/liyucheng09/Selective_Context) — MIT — wrap
+- [Selective Context](https://github.com/liyucheng09/Selective_Context) — MIT
   Selective Context (github.com/liyucheng09/Selective_Context, MIT)
 
-- [AutoCompressor](https://github.com/princeton-nlp/AutoCompressors) — MIT — wrap
+- [AutoCompressor](https://github.com/princeton-nlp/AutoCompressors) — MIT
   AutoCompressor (github.com/princeton-nlp/AutoCompressors, MIT)
 
-- [RECOMP](https://github.com/stanford-futuredata/RECOMP) — MIT — wrap
+- [RECOMP](https://github.com/stanford-futuredata/RECOMP) — MIT
   RECOMP (github.com/stanford-futuredata/RECOMP, MIT)
 
-- [Mem0](https://github.com/mem0ai/mem0) — Apache-2.0 — advisory
+- [Mem0](https://github.com/mem0ai/mem0) — Apache-2.0
   Mem0 (github.com/mem0ai/mem0, Apache-2.0)
 
-- [Supermemory](https://github.com/supermemoryai/supermemory) — AGPL-3.0 — advisory
+- [Supermemory](https://github.com/supermemoryai/supermemory) — AGPL-3.0
   Supermemory (github.com/supermemoryai/supermemory, AGPL-3.0)
 
-- [Letta (MemGPT)](https://github.com/letta-ai/letta) — Apache-2.0 — advisory
+- [Letta (MemGPT)](https://github.com/letta-ai/letta) — Apache-2.0
   Letta (github.com/letta-ai/letta, Apache-2.0)
 
-- [Zep](https://github.com/getzep/zep) — Apache-2.0 — advisory
+- [Zep](https://github.com/getzep/zep) — Apache-2.0
   Zep (github.com/getzep/zep, Apache-2.0)
 
-- [LangMem](https://github.com/langchain-ai/langmem) — MIT — advisory
+- [LangMem](https://github.com/langchain-ai/langmem) — MIT
   LangMem (github.com/langchain-ai/langmem, MIT)
 
-- [Cognee](https://github.com/topoteretes/cognee) — Apache-2.0 — advisory
+- [Cognee](https://github.com/topoteretes/cognee) — Apache-2.0
   Cognee (github.com/topoteretes/cognee, Apache-2.0)
 
-- [vLLM](https://github.com/vllm-project/vllm) — Apache-2.0 — catalog_only
+- [vLLM](https://github.com/vllm-project/vllm) — Apache-2.0
   vLLM (github.com/vllm-project/vllm, Apache-2.0)
 
-- [SGLang](https://github.com/sgl-project/sglang) — Apache-2.0 — catalog_only
+- [SGLang](https://github.com/sgl-project/sglang) — Apache-2.0
   SGLang (github.com/sgl-project/sglang, Apache-2.0)
 
-- [LMCache](https://github.com/LMCache/LMCache) — Apache-2.0 — wrap
+- [LMCache](https://github.com/LMCache/LMCache) — Apache-2.0
   LMCache (github.com/LMCache/LMCache, Apache-2.0)
 
-- [GGUF / llama.cpp quantization](https://github.com/ggml-org/llama.cpp) — MIT — catalog_only
+- [GGUF / llama.cpp quantization](https://github.com/ggml-org/llama.cpp) — MIT
   GGUF / llama.cpp quantization (github.com/ggml-org/llama.cpp, MIT)
 
-- [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) — MIT — catalog_only
+- [AutoGPTQ](https://github.com/AutoGPTQ/AutoGPTQ) — MIT
   AutoGPTQ (github.com/AutoGPTQ/AutoGPTQ, MIT)
 
-- [AutoAWQ](https://github.com/casper-hansen/AutoAWQ) — MIT — catalog_only
+- [AutoAWQ](https://github.com/casper-hansen/AutoAWQ) — MIT
   AutoAWQ (github.com/casper-hansen/AutoAWQ, MIT)
 
-- [bitsandbytes](https://github.com/bitsandbytes-foundation/bitsandbytes) — MIT — catalog_only
+- [bitsandbytes](https://github.com/bitsandbytes-foundation/bitsandbytes) — MIT
   bitsandbytes (github.com/bitsandbytes-foundation/bitsandbytes, MIT)
 
-- [Ollama](https://github.com/ollama/ollama) — MIT — catalog_only
+- [Ollama](https://github.com/ollama/ollama) — MIT
   Ollama (github.com/ollama/ollama, MIT)
 
-- [llama.cpp](https://github.com/ggml-org/llama.cpp) — MIT — catalog_only
+- [llama.cpp](https://github.com/ggml-org/llama.cpp) — MIT
   llama.cpp (github.com/ggml-org/llama.cpp, MIT)
 
-- [LiteLLM](https://github.com/BerriAI/litellm) — MIT — wrap
+- [LiteLLM](https://github.com/BerriAI/litellm) — MIT
   LiteLLM (github.com/BerriAI/litellm, MIT)
 
-- [RouteLLM](https://github.com/lm-sys/RouteLLM) — MIT — wrap
+- [RouteLLM](https://github.com/lm-sys/RouteLLM) — MIT
   RouteLLM (github.com/lm-sys/RouteLLM, MIT)
 
-- [Medusa](https://github.com/FasterDecoding/Medusa) — MIT — catalog_only
+- [Medusa](https://github.com/FasterDecoding/Medusa) — MIT
   Medusa (github.com/FasterDecoding/Medusa, MIT)
 
-- [EAGLE-2](https://github.com/SafeAILab/EAGLE) — Apache-2.0 — catalog_only
+- [EAGLE-2](https://github.com/SafeAILab/EAGLE) — Apache-2.0
   EAGLE-2 (github.com/SafeAILab/EAGLE, Apache-2.0)
 
-- [FlashAttention](https://github.com/Dao-AILab/flash-attention) — BSD-3-Clause — catalog_only
+- [FlashAttention](https://github.com/Dao-AILab/flash-attention) — BSD-3-Clause
   FlashAttention (github.com/Dao-AILab/flash-attention, BSD-3-Clause)
 
-- [MInference](https://github.com/microsoft/MInference) — MIT — catalog_only
+- [MInference](https://github.com/microsoft/MInference) — MIT
   MInference (github.com/microsoft/MInference, MIT)
 
-- [PEFT](https://github.com/huggingface/peft) — Apache-2.0 — catalog_only
+- [PEFT](https://github.com/huggingface/peft) — Apache-2.0
   PEFT (github.com/huggingface/peft, Apache-2.0)
 
-- [Unsloth](https://github.com/unslothai/unsloth) — Apache-2.0 — catalog_only
+- [Unsloth](https://github.com/unslothai/unsloth) — Apache-2.0
   Unsloth (github.com/unslothai/unsloth, Apache-2.0)
 
-- [LangChain](https://github.com/langchain-ai/langchain) — MIT — catalog_only
+- [LangChain](https://github.com/langchain-ai/langchain) — MIT
   LangChain (github.com/langchain-ai/langchain, MIT)
 
-- [LangGraph](https://github.com/langchain-ai/langgraph) — MIT — catalog_only
+- [LangGraph](https://github.com/langchain-ai/langgraph) — MIT
   LangGraph (github.com/langchain-ai/langgraph, MIT)
 
-- [LlamaIndex](https://github.com/run-llama/llama_index) — MIT — catalog_only
+- [LlamaIndex](https://github.com/run-llama/llama_index) — MIT
   LlamaIndex (github.com/run-llama/llama_index, MIT)
 
-- [Chroma](https://github.com/chroma-core/chroma) — Apache-2.0 — catalog_only
+- [Chroma](https://github.com/chroma-core/chroma) — Apache-2.0
   Chroma (github.com/chroma-core/chroma, Apache-2.0)
 
-- [Qdrant](https://github.com/qdrant/qdrant) — Apache-2.0 — catalog_only
+- [Qdrant](https://github.com/qdrant/qdrant) — Apache-2.0
   Qdrant (github.com/qdrant/qdrant, Apache-2.0)
 
-- [Guardrails AI](https://github.com/guardrails-ai/guardrails) — Apache-2.0 — wrap
+- [Guardrails AI](https://github.com/guardrails-ai/guardrails) — Apache-2.0
   Guardrails AI (github.com/guardrails-ai/guardrails, Apache-2.0)
 
-- [Langfuse](https://github.com/langfuse/langfuse) — MIT — catalog_only
+- [Langfuse](https://github.com/langfuse/langfuse) — MIT
   Langfuse (github.com/langfuse/langfuse, MIT)
 
-- [DSPy](https://github.com/stanfordnlp/dspy) — MIT — catalog_only
+- [DSPy](https://github.com/stanfordnlp/dspy) — MIT
   DSPy (github.com/stanfordnlp/dspy, MIT)
 
-- [Headroom](https://github.com/headroomhq/headroom) — unknown — catalog_only
+- [Headroom](https://github.com/headroomhq/headroom) — unknown
   Headroom (github.com/headroomhq/headroom)
 
-- CacheAligner — unknown — catalog_only
+- CacheAligner — unknown
   CacheAligner
 
-- Graphify — unknown — catalog_only
+- Graphify — unknown
   Graphify
 
-- Caveman — unknown — catalog_only
+- Caveman — unknown
   Caveman
 
-- [PCToolkit](https://github.com/3DAgentWorld/Toolkit-for-Prompt-Compression) — MIT — wrap
+- [PCToolkit](https://github.com/3DAgentWorld/Toolkit-for-Prompt-Compression) — MIT
   PCToolkit (github.com/3DAgentWorld/Toolkit-for-Prompt-Compression, MIT)
 
-- OpenBundle prefix router — MIT — wrap
+- OpenBundle prefix router — MIT
   OpenBundle prefix router (first-party, MIT)
 
-- [OpenRouter](https://github.com/OpenRouterTeam/openrouter) — MIT — wrap
+- [OpenRouter](https://github.com/OpenRouterTeam/openrouter) — MIT
   OpenRouter (github.com/OpenRouterTeam/openrouter, MIT)
 
-- OpenBundle input guardrails — MIT — wrap
+- OpenBundle input guardrails — MIT
   OpenBundle input guardrails (first-party, MIT)
 
-- [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) — Apache-2.0 — wrap
+- [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) — Apache-2.0
   NeMo Guardrails (github.com/NVIDIA/NeMo-Guardrails, Apache-2.0)
 
-- [LLM Guard](https://github.com/protectai/llm-guard) — MIT — wrap
+- [LLM Guard](https://github.com/protectai/llm-guard) — MIT
   LLM Guard (github.com/protectai/llm-guard, MIT)
 
-- [Rebuff](https://github.com/protectai/rebuff) — Apache-2.0 — wrap
+- [Rebuff](https://github.com/protectai/rebuff) — Apache-2.0
   Rebuff (github.com/protectai/rebuff, Apache-2.0)
 
-- OpenBundle sample eval — MIT — wrap
+- OpenBundle sample eval — MIT
   OpenBundle sample eval (first-party, MIT)
 
-- [promptfoo](https://github.com/promptfoo/promptfoo) — MIT — wrap
+- [promptfoo](https://github.com/promptfoo/promptfoo) — MIT
   promptfoo (github.com/promptfoo/promptfoo, MIT)
 
-- [DeepEval](https://github.com/confident-ai/deepeval) — Apache-2.0 — wrap
+- [DeepEval](https://github.com/confident-ai/deepeval) — Apache-2.0
   DeepEval (github.com/confident-ai/deepeval, Apache-2.0)
 
-- [RAGAS](https://github.com/explodinggradients/ragas) — Apache-2.0 — wrap
+- [RAGAS](https://github.com/explodinggradients/ragas) — Apache-2.0
   RAGAS (github.com/explodinggradients/ragas, Apache-2.0)
 
-- [TruLens](https://github.com/truera/trulens) — MIT — wrap
+- [TruLens](https://github.com/truera/trulens) — MIT
   TruLens (github.com/truera/trulens, MIT)
 
-- [OpenBench](https://github.com/groq/openbench) — MIT — wrap
+- [OpenBench](https://github.com/groq/openbench) — MIT
   OpenBench (github.com/groq/openbench, MIT)
 
-- OpenBundle JSON schema retry — MIT — wrap
+- OpenBundle JSON schema retry — MIT
   OpenBundle JSON schema retry (first-party, MIT)
 
-- [Instructor](https://github.com/instructor-ai/instructor) — MIT — wrap
+- [Instructor](https://github.com/instructor-ai/instructor) — MIT
   Instructor (github.com/instructor-ai/instructor, MIT)
 
-- [PydanticAI](https://github.com/pydantic/pydantic-ai) — MIT — wrap
+- [PydanticAI](https://github.com/pydantic/pydantic-ai) — MIT
   PydanticAI (github.com/pydantic/pydantic-ai, MIT)
 
-- [BAML](https://github.com/BoundaryML/baml) — Apache-2.0 — wrap
+- [BAML](https://github.com/BoundaryML/baml) — Apache-2.0
   BAML (github.com/BoundaryML/baml, Apache-2.0)
 
-- [Mirascope](https://github.com/Mirascope/mirascope) — MIT — wrap
+- [Mirascope](https://github.com/Mirascope/mirascope) — MIT
   Mirascope (github.com/Mirascope/mirascope, MIT)
 
-- [Outlines](https://github.com/dottxt-ai/outlines) — Apache-2.0 — catalog_only
+- [Outlines](https://github.com/dottxt-ai/outlines) — Apache-2.0
   Outlines (github.com/dottxt-ai/outlines, Apache-2.0)
 
-- [XGrammar](https://github.com/mlc-ai/xgrammar) — Apache-2.0 — catalog_only
+- [XGrammar](https://github.com/mlc-ai/xgrammar) — Apache-2.0
   XGrammar (github.com/mlc-ai/xgrammar, Apache-2.0)
 
-- [Guidance](https://github.com/guidance-ai/guidance) — MIT — catalog_only
+- [Guidance](https://github.com/guidance-ai/guidance) — MIT
   Guidance (github.com/guidance-ai/guidance, MIT)
 
-- [LM Format Enforcer](https://github.com/noamgat/lm-format-enforcer) — MIT — catalog_only
+- [LM Format Enforcer](https://github.com/noamgat/lm-format-enforcer) — MIT
   LM Format Enforcer (github.com/noamgat/lm-format-enforcer, MIT)
 
-- [Jsonformer](https://github.com/1rgs/jsonformer) — MIT — catalog_only
+- [Jsonformer](https://github.com/1rgs/jsonformer) — MIT
   Jsonformer (github.com/1rgs/jsonformer, MIT)
+
+- OpenBundle session summary — MIT
+  OpenBundle session summary (first-party, MIT)
+
+- OpenBundle request coalesce — MIT
+  OpenBundle request coalesce (first-party, MIT)
+
+- [stampede-cache](https://pypi.org/project/stampede/) — MIT
+  stampede-cache (pypi.org/project/stampede, MIT)
+
+- llm-batch-coalesce — MIT
+  llm-batch-coalesce
+
+- aiocoalesce — MIT
+  aiocoalesce
+
+- OpenBundle prompt-cache inject — MIT
+  OpenBundle prompt-cache inject (first-party, MIT)
+
+- [Autocache](https://github.com/montevive/autocache) — MIT
+  Autocache (github.com/montevive/autocache, MIT)
+
+- langchain-smart-cache — MIT
+  langchain-smart-cache
+
+- OpenBundle session hygiene — MIT
+  OpenBundle session hygiene (first-party, MIT)
+
+- openai-agents-context-compaction — MIT
+  openai-agents-context-compaction (PyPI)
+
+- [context-optimizer](https://github.com/evermeer/context-optimizer) — MIT
+  context-optimizer (github.com/evermeer/context-optimizer)
+
+- [opencode-dynamic-context-pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning) — MIT
+  opencode-dynamic-context-pruning
+
+- ContextWatch — MIT
+  ContextWatch (pypi.org/project/contextwatch)
+
+- Provider Batch API — see provider
+  Anthropic / OpenAI Batch API (~50% off, no streaming)

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from openbundle.adapters.llmlingua2 import CompressLayer
-from openbundle.config import CompressLayerConfig
+from openbundle.adapters.mem0 import MemoryLayer
+from openbundle.config import CompressLayerConfig, MemoryLayerConfig
 from openbundle.metrics.samples import load_samples
 from openbundle.metrics.tokens import count_messages
 from openbundle.pipeline.types import InternalRequest
@@ -41,6 +42,30 @@ def smoke_check_compress() -> bool:
         before_text = str(req.original_messages)
         after_text = str(out.messages)
         if quality_pass(before_text, after_text) and after <= before:
+            ok += 1
+    return ok >= 1
+
+
+def smoke_check_memory(*, adapter: str = "summary") -> bool:
+    samples = load_samples()
+    if not samples:
+        return False
+    layer = MemoryLayer(MemoryLayerConfig(enabled=True, adapter=adapter, window=4))
+    ok = 0
+    for sample in samples:
+        messages = list(sample.get("messages") or [])
+        if not messages:
+            continue
+        req = InternalRequest(
+            protocol="openai",
+            model=str(sample.get("model") or "gpt-4.1"),
+            messages=list(messages),
+            original_messages=list(messages),
+            body={"messages": messages},
+            system=sample.get("system"),
+        )
+        out = layer.apply(req)
+        if quality_pass(str(req.original_messages), str(out.messages)):
             ok += 1
     return ok >= 1
 

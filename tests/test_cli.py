@@ -39,7 +39,7 @@ def test_init_core_only_writes_yaml(tmp_path: Path, monkeypatch):
     assert "127.0.0.1:4180" in text
     assert "semantic: false" in text
     assert "every_n_turns: 3" in text
-    assert "memory: none" in text
+    assert "memory: summary" in text
     assert "compress: none" in text
     assert "ANTHROPIC_BASE_URL" in result.stdout
     assert "OpenBundle exact-hash cache (first-party, MIT)" in result.stdout
@@ -58,7 +58,7 @@ def test_init_without_extras_skips_memory_and_compress(tmp_path: Path, monkeypat
     result = runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
     assert result.exit_code == 0, result.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "memory: none" in text
+    assert "memory: summary" in text
     assert "compress: none" in text
     assert INIT_SKIP_GENERIC in result.stdout
 
@@ -70,10 +70,9 @@ def test_init_with_extras_enables_named_tools(tmp_path: Path, monkeypatch):
     result = runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
     assert result.exit_code == 0, result.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "memory: none" in text
+    assert "memory: mem0" in text
     assert "compress: llmlingua2" in text
     assert "Mem0 (github.com/mem0ai/mem0, Apache-2.0)" in result.stdout
-    assert "Advisory" in result.stdout
     assert "LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)" in result.stdout
 
 
@@ -87,7 +86,7 @@ def test_init_skip_generic_but_config_is_specific(tmp_path: Path, monkeypatch):
     shown = runner.invoke(app, ["config", "--no-banner"])
     assert shown.exit_code == 0, shown.output
     assert INIT_SKIP_GENERIC not in shown.stdout
-    assert "advisory only — never auto-enabled" in shown.stdout
+    assert "you add this yourself" in shown.stdout
     assert "extra llmlingua not installed" in shown.stdout
     assert "not wired in v1" in shown.stdout
 
@@ -95,22 +94,24 @@ def test_init_skip_generic_but_config_is_specific(tmp_path: Path, monkeypatch):
 def test_select_uses_installed_extras():
     scan = ScanResult(coding_agent=True)
     skipped = select(scan, [], core_only=False)
-    assert skipped.memory == "none"
+    assert skipped.memory == "summary"
     assert skipped.compress == "none"
     assert skipped.cache == "sqlite_exact"
     assert skipped.live["memory"] is False
     on = select(scan, ["mem0", "llmlingua"], core_only=False, allow_lossy=True)
-    assert on.memory == "none"
-    assert on.live["memory"] is False
+    assert on.memory == "mem0"
+    assert on.live["memory"] is True
     assert on.compress == "llmlingua2"
     assert on.live["compress"] is True
+    assert on.live["batch"] is False
     cold = select(scan, ["mem0", "llmlingua"], core_only=False, allow_lossy=False)
-    assert cold.memory == "none"
+    assert cold.memory == "mem0"
     assert cold.compress == "llmlingua2"
     assert cold.live["compress"] is False
     assert cold.live["cache"] is True
     forced = select(scan, ["mem0", "llmlingua"], core_only=True)
-    assert forced.memory == "none"
+    assert forced.memory == "summary"
+    assert forced.live["memory"] is False
     assert forced.compress == "none"
 
 
@@ -153,16 +154,17 @@ def test_bare_command_is_help(tmp_path: Path, monkeypatch):
     assert "Usage" in result.output or "init" in result.output
 
 
-def test_config_set_refuses_memory_and_sets_compress(tmp_path: Path, monkeypatch):
+def test_config_set_memory_and_compress(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _isolate_state(tmp_path, monkeypatch)
     monkeypatch.setattr("openbundle.cli.installed_extras", lambda: ["mem0", "llmlingua"])
     runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
     mem = runner.invoke(app, ["config", "set", "memory", "mem0", "--no-banner"])
-    assert mem.exit_code == 2
-    assert "advisory" in mem.output.lower()
+    assert mem.exit_code == 0, mem.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "memory: none" in text
+    assert "memory: mem0" in text
+    batch = runner.invoke(app, ["config", "set", "batch", "provider_batch", "--no-banner"])
+    assert batch.exit_code == 2
     sett = runner.invoke(app, ["config", "set", "compress", "llmlingua2", "--no-banner"])
     assert sett.exit_code == 0, sett.output
     assert "LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)" in sett.stdout

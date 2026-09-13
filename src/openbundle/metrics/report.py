@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from statistics import median
 
-from openbundle.kb.catalog import credit_for_layer, credit_line
+from openbundle.kb.catalog import credit_for_layer
 from openbundle.metrics.cost import estimate_cost, load_pricing, lookup_model
 
 
@@ -97,7 +97,7 @@ def format_report(events: list[dict]) -> str:
         f"cache hit rate              {hit_rate}\n"
         f"layers           {', '.join(credited)}"
         f"{extract_line}\n"
-        f"advisory         memory not applied ({credit_line('mem0')})\n"
+        f"prompt cache     hit rate {hit_rate} (live, not a static multiple)\n"
         f"pricing          {pricing_line}"
     )
 

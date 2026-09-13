@@ -94,7 +94,7 @@ tools:
   adapter: openbundle.adapters.mem0
   url: https://github.com/mem0ai/mem0
   credit_line: Mem0 (github.com/mem0ai/mem0, Apache-2.0)
-  lane: advisory
+  lane: wrap
 - id: supermemory
   name: Supermemory
   categories:
@@ -104,7 +104,7 @@ tools:
   status: mapped
   url: https://github.com/supermemoryai/supermemory
   credit_line: Supermemory (github.com/supermemoryai/supermemory, AGPL-3.0)
-  lane: advisory
+  lane: wrap
 - id: letta
   name: Letta (MemGPT)
   categories:
@@ -113,7 +113,7 @@ tools:
   status: mapped
   url: https://github.com/letta-ai/letta
   credit_line: Letta (github.com/letta-ai/letta, Apache-2.0)
-  lane: advisory
+  lane: wrap
 - id: zep
   name: Zep
   categories:
@@ -123,7 +123,7 @@ tools:
   status: mapped
   url: https://github.com/getzep/zep
   credit_line: Zep (github.com/getzep/zep, Apache-2.0)
-  lane: advisory
+  lane: wrap
 - id: langmem
   name: LangMem
   categories:
@@ -132,7 +132,7 @@ tools:
   status: mapped
   url: https://github.com/langchain-ai/langmem
   credit_line: LangMem (github.com/langchain-ai/langmem, MIT)
-  lane: advisory
+  lane: wrap
 - id: cognee
   name: Cognee
   categories:
@@ -141,7 +141,7 @@ tools:
   status: mapped
   url: https://github.com/topoteretes/cognee
   credit_line: Cognee (github.com/topoteretes/cognee, Apache-2.0)
-  lane: advisory
+  lane: wrap
 - id: vllm
   name: vLLM
   categories:
@@ -627,3 +627,135 @@ tools:
   url: https://github.com/1rgs/jsonformer
   credit_line: Jsonformer (github.com/1rgs/jsonformer, MIT)
   notes: Token-level constrained decoding; not wireable in a proxy.
+- id: summary
+  name: OpenBundle session summary
+  categories:
+  - agent_memory
+  license: MIT
+  how_open: oss
+  status: active
+  lane: wrap
+  extra: null
+  adapter: openbundle.adapters.mem0
+  credit_line: OpenBundle session summary (first-party, MIT)
+- id: singleflight
+  name: OpenBundle request coalesce
+  categories:
+  - coalesce
+  license: MIT
+  how_open: oss
+  status: active
+  lane: wrap
+  extra: null
+  adapter: openbundle.adapters.singleflight
+  credit_line: OpenBundle request coalesce (first-party, MIT)
+- id: stampede
+  name: stampede-cache
+  categories:
+  - coalesce
+  license: MIT
+  status: mapped
+  lane: wrap
+  url: https://pypi.org/project/stampede/
+  credit_line: stampede-cache (pypi.org/project/stampede, MIT)
+- id: llm_batch_coalesce
+  name: llm-batch-coalesce
+  categories:
+  - coalesce
+  license: MIT
+  status: mapped
+  lane: wrap
+  credit_line: llm-batch-coalesce
+- id: aiocoalesce
+  name: aiocoalesce
+  categories:
+  - coalesce
+  license: MIT
+  status: mapped
+  lane: wrap
+  credit_line: aiocoalesce
+- id: prompt_cache
+  name: OpenBundle prompt-cache inject
+  categories:
+  - prompt_caching
+  license: MIT
+  how_open: oss
+  status: active
+  lane: wrap
+  extra: null
+  adapter: openbundle.adapters.prompt_cache
+  credit_line: OpenBundle prompt-cache inject (first-party, MIT)
+- id: autocache
+  name: Autocache
+  categories:
+  - prompt_caching
+  license: MIT
+  status: mapped
+  lane: wrap
+  url: https://github.com/montevive/autocache
+  credit_line: Autocache (github.com/montevive/autocache, MIT)
+- id: langchain_smart_cache
+  name: langchain-smart-cache
+  categories:
+  - prompt_caching
+  license: MIT
+  status: mapped
+  lane: wrap
+  notes: LangChain-tied reference; not standalone.
+  credit_line: langchain-smart-cache
+- id: session_hygiene
+  name: OpenBundle session hygiene
+  categories:
+  - context_management
+  license: MIT
+  how_open: oss
+  status: active
+  lane: wrap
+  extra: null
+  adapter: openbundle.adapters.session_hygiene
+  credit_line: OpenBundle session hygiene (first-party, MIT)
+- id: openai_agents_context_compaction
+  name: openai-agents-context-compaction
+  categories:
+  - context_management
+  license: MIT
+  status: mapped
+  lane: wrap
+  credit_line: openai-agents-context-compaction (PyPI)
+- id: context_optimizer
+  name: context-optimizer
+  categories:
+  - context_management
+  license: MIT
+  status: mapped
+  lane: wrap
+  url: https://github.com/evermeer/context-optimizer
+  notes: Claude Code hook; reference implementation, not pip-wired.
+  credit_line: context-optimizer (github.com/evermeer/context-optimizer)
+- id: opencode_dcp
+  name: opencode-dynamic-context-pruning
+  categories:
+  - context_management
+  license: MIT
+  status: mapped
+  lane: wrap
+  url: https://github.com/Opencode-DCP/opencode-dynamic-context-pruning
+  notes: OpenCode hook; reference implementation, not pip-wired.
+  credit_line: opencode-dynamic-context-pruning
+- id: contextwatch
+  name: ContextWatch
+  categories:
+  - observability
+  license: MIT
+  status: mapped
+  lane: wrap
+  notes: Candidate for openbundle report, not the live path.
+  credit_line: ContextWatch (pypi.org/project/contextwatch)
+- id: provider_batch
+  name: Provider Batch API
+  categories:
+  - batch
+  license: see provider
+  status: mapped
+  lane: advisory
+  credit_line: Anthropic / OpenAI Batch API (~50% off, no streaming)

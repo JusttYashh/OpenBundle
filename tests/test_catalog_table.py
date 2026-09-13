@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from openbundle.kb.catalog import load_tools
 from openbundle.kb.catalog_table import (
     END,
     START,
@@ -8,23 +7,26 @@ from openbundle.kb.catalog_table import (
     render_catalog_block,
     render_readme_summary,
     replace_catalog_section,
+    shipping_tools,
 )
 
 
-def test_catalog_block_lists_all_tools_and_statuses():
-    tools = load_tools()
+def test_catalog_block_lists_shipping_tools():
+    tools = shipping_tools()
     n_tools, n_cats, n_active = catalog_counts()
     block = render_catalog_block()
     assert str(n_tools) in block
     assert str(n_cats) in block
     assert str(n_active) in block
-    assert "active in v2 (wired)" in block
-    assert "mapped — not wired yet" in block
-    assert "Wrap-eligible" in block
-    assert "Advisory only" in block
+    assert "on today" in block
+    assert "coming next" in block
+    assert "Wired and coming next" in block
+    assert "You add this yourself" in block
+    assert "out of scope" not in block.lower()
+    assert "catalog-only" not in block.lower()
     assert "GPTCache" in block
-    assert "vLLM" in block
     assert "OpenBundle exact-hash cache" in block
+    assert "vLLM" not in block
     for tool in tools:
         assert tool.name in block
         if tool.url:
@@ -43,4 +45,5 @@ def test_readme_has_markers():
     assert START in text
     assert END in text
     assert render_readme_summary().strip() in text
+    assert "out of scope" not in text.lower()
     assert Path("CATALOG.md").is_file()

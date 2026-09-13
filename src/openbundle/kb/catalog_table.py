@@ -1,4 +1,4 @@
-"""README catalog table — generated from catalog.yaml, never hand-maintained."""
+"""README / CATALOG.md — generated from catalog.yaml. User docs hide research-only rows."""
 
 from __future__ import annotations
 
@@ -11,36 +11,34 @@ END = "<!-- CATALOG:END -->"
 
 LEAD_CATEGORIES = (
     "caching",
+    "coalesce",
+    "prompt_caching",
     "prompt_compression",
+    "agent_memory",
+    "context_management",
     "routing",
     "guardrails",
     "evaluation",
     "structured_output",
-    "agent_memory",
+    "batch",
 )
 CATEGORY_TITLES = {
     "caching": "Cache",
-    "agent_memory": "Memory (advisory)",
+    "coalesce": "Coalesce",
+    "prompt_caching": "Prompt cache",
+    "agent_memory": "Memory",
     "prompt_compression": "Compression",
-    "quantization": "Quantization",
-    "serving": "Serving",
+    "context_management": "Context",
     "routing": "Routing",
-    "speculative_decoding": "Speculative decoding",
-    "attention": "Attention",
-    "fine_tuning": "Fine-tuning",
-    "orchestration": "Orchestration",
-    "rag": "RAG",
     "guardrails": "Guardrails",
-    "observability": "Observability",
-    "prompt_optimization": "Prompt optimization",
-    "coding_agent": "Coding-agent tools",
     "evaluation": "Evaluation",
     "structured_output": "Structured output",
+    "batch": "Batch",
+    "observability": "Reporting",
 }
 LANE_TITLES = {
-    "wrap": "Wrap-eligible (proxy can run these)",
-    "advisory": "Advisory only (never auto-enabled)",
-    "catalog_only": "Structurally out of scope",
+    "wrap": "Wired and coming next",
+    "advisory": "You add this yourself",
 }
 
 
@@ -50,8 +48,8 @@ def _title(category: str) -> str:
 
 def _status_cell(status: str) -> str:
     if status == "active":
-        return "active in v2 (wired)"
-    return "mapped — not wired yet"
+        return "on today"
+    return "coming next"
 
 
 def _name_cell(name: str, url: str) -> str:
@@ -60,8 +58,12 @@ def _name_cell(name: str, url: str) -> str:
     return name
 
 
+def shipping_tools():
+    return [tool for tool in load_tools() if tool.lane in {"wrap", "advisory"}]
+
+
 def catalog_counts() -> tuple[int, int, int]:
-    tools = load_tools()
+    tools = shipping_tools()
     categories: set[str] = set()
     active = 0
     for tool in tools:
@@ -75,28 +77,18 @@ def render_readme_summary() -> str:
     n_tools, n_cats, n_active = catalog_counts()
     lanes = lane_counts()
     return (
-        f"**{n_tools} open-source tools tracked across {n_cats} categories** — "
-        f"{lanes['wrap']} wrap-eligible (can run in the proxy), "
-        f"{lanes['advisory']} advisory-only (memory), "
-        f"{lanes['catalog_only']} catalog-only (structurally can't run in a proxy — see below). "
-        f"**{n_active} have a real, wired adapter today**; the rest are catalogued "
-        "with license and install info, open for a PR to wire in next. "
-        "Full table with links: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).\n"
+        f"**{n_tools} tools we ship or recommend** across **{n_cats}** categories — "
+        f"**{n_active}** on today, {lanes['advisory']} you add yourself (Batch API). "
+        "Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).\n"
     )
 
 
 def render_catalog_block() -> str:
-    tools = load_tools()
     n_tools, n_cats, n_active = catalog_counts()
-    lanes = lane_counts()
     lines = [
         (
-            f"OpenBundle tracks **{n_tools}** open-source tools across **{n_cats}** categories "
-            f"({lanes['wrap']} wrap-eligible, {lanes['advisory']} advisory, "
-            f"{lanes['catalog_only']} catalog-only). "
-            f"**{n_active}** have a wired adapter today; the rest are catalogued, "
-            "licensed, and ready to be adapted next — see [CREDITS.md](CREDITS.md) and open an "
-            "issue/PR to help wire one in."
+            f"OpenBundle ships or recommends **{n_tools}** tools across **{n_cats}** categories. "
+            f"**{n_active}** are wired today."
         ),
         "",
     ]
@@ -106,15 +98,12 @@ def render_catalog_block() -> str:
 
 def render_catalog_page() -> str:
     n_tools, n_cats, n_active = catalog_counts()
-    lanes = lane_counts()
     lines = [
         "# Catalog",
         "",
         (
-            f"OpenBundle tracks **{n_tools}** open-source tools across **{n_cats}** categories "
-            f"({lanes['wrap']} wrap-eligible, {lanes['advisory']} advisory, "
-            f"{lanes['catalog_only']} catalog-only). "
-            f"**{n_active}** have a wired adapter today."
+            f"OpenBundle ships or recommends **{n_tools}** tools across **{n_cats}** categories. "
+            f"**{n_active}** are wired today."
         ),
         "",
     ]
@@ -123,12 +112,11 @@ def render_catalog_page() -> str:
 
 
 def _lane_tables(heading: str) -> list[str]:
-    tools = load_tools()
     by_lane: dict[str, list] = defaultdict(list)
-    for tool in tools:
+    for tool in shipping_tools():
         by_lane[tool.lane].append(tool)
     lines: list[str] = []
-    for lane in ("wrap", "advisory", "catalog_only"):
+    for lane in ("wrap", "advisory"):
         rows = by_lane.get(lane) or []
         if not rows:
             continue

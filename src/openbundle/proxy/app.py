@@ -34,13 +34,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "listen": settings.listen,
             "overlay": "on" if on else "off",
             "cache": bool(on and layers.cache.enabled),
+            "coalesce": bool(on and layers.coalesce.enabled),
+            "memory": bool(on and layers.memory.enabled),
+            "context": bool(on and layers.context.enabled),
             "compress": bool(on and layers.compress.enabled),
+            "prompt_cache": bool(on and layers.prompt_cache.enabled),
             "routing": bool(on and layers.routing.enabled),
             "guardrails": bool(on and layers.guardrails.enabled),
             "structured": bool(on and layers.structured.enabled),
             "eval": bool(on and layers.eval.enabled),
-            "memory": False,
-            "memory_lane": "advisory",
+            "batch": False,
+            "batch_lane": "advisory",
         }
 
     @app.post("/v1/chat/completions")

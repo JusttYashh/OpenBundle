@@ -1,6 +1,5 @@
 # Overlay on/off lives in ~/.openbundle/overlay.yaml (`openbundle on` / `openbundle off`).
-# OPENBUNDLE_ENABLED and --passthrough override that file.
-listen: 127.0.0.1:4180   # binds loopback only; --expose required for 0.0.0.0
+listen: 127.0.0.1:4180
 providers:
   anthropic:
     api_key: env:ANTHROPIC_API_KEY
@@ -9,22 +8,45 @@ providers:
     api_key: env:OPENAI_API_KEY
     base_url: https://api.openai.com/v1
 bundle:
-  cache: sqlite_exact    # OpenBundle exact-hash cache (first-party, MIT)
-  compress: none         # LLMLingua-2 after extra + smoke-check
+  cache: sqlite_exact
+  coalesce: singleflight
+  memory: summary
+  context: session_hygiene
+  compress: none
+  prompt_cache: prompt_cache
   routing: prefix_router
   guardrails: input_guard
   structured: json_schema
   eval: sample_eval
-  memory: none           # advisory — never auto-enabled
+  batch: none
 layers:
   cache:
     enabled: true
     semantic: false
+  coalesce:
+    enabled: false
+    adapter: singleflight
+  memory:
+    enabled: false
+    user_id: local
+    adapter: summary
+    extract:
+      every_n_turns: 3
+      min_interval_seconds: 15
+      max_per_minute: 4
+      skip_if_user_tokens_below: 50
+  context:
+    enabled: false
+    adapter: session_hygiene
+    window: 40
   compress:
     enabled: false
     rate: 0.5
     skip_cache_control: true
     adapter: llmlingua2
+  prompt_cache:
+    enabled: false
+    adapter: prompt_cache
   routing:
     enabled: false
     adapter: prefix_router
@@ -37,11 +59,6 @@ layers:
   eval:
     enabled: false
     adapter: sample_eval
-  memory:
+  batch:
     enabled: false
-    user_id: local
-    extract:
-      every_n_turns: 3
-      min_interval_seconds: 15
-      max_per_minute: 4
-      skip_if_user_tokens_below: 50
+    adapter: none
