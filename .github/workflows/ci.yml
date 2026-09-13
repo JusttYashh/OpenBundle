@@ -18,5 +18,29 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install
         run: pip install -e ".[dev]"
+      - name: Sync catalog docs
+        run: python scripts/gen_readme_catalog.py --check
       - name: Test
         run: pytest -q
+
+  about:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Set repository About (no stacked-multiplier claim)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo edit "$GITHUB_REPOSITORY" \
+            --description "The compatibility layer for open-source AI optimization tools — auto-selects, wires, and shows before/after for the ones that work together."
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/topics" \
+            -H "Accept: application/vnd.github.mercy-preview+json" \
+            -f 'names[]=llm' \
+            -f 'names[]=proxy' \
+            -f 'names[]=anthropic' \
+            -f 'names[]=openai' \
+            -f 'names[]=cache' \
+            -f 'names[]=prompt-compression' \
+            -f 'names[]=open-source'

@@ -9,16 +9,26 @@ from typing import Any
 
 import yaml
 
-WRAP_CATEGORIES = ("cache", "memory", "compress")
+WRAP_CATEGORIES = ("cache", "compress", "routing", "guardrails", "structured", "eval")
+ADVISORY_CATEGORIES = ("memory",)
+ALL_PICK_CATEGORIES = WRAP_CATEGORIES + ADVISORY_CATEGORIES
 CATALOG_CATEGORY = {
     "cache": "caching",
     "memory": "agent_memory",
     "compress": "prompt_compression",
+    "routing": "routing",
+    "guardrails": "guardrails",
+    "structured": "structured_output",
+    "eval": "evaluation",
 }
 LAYER_DEFAULT_TOOL = {
     "cache": "sqlite_exact",
     "memory": "mem0",
     "compress": "llmlingua2",
+    "routing": "prefix_router",
+    "guardrails": "input_guard",
+    "structured": "json_schema",
+    "eval": "sample_eval",
 }
 INIT_SKIP_GENERIC = "no compatible tool for this setup"
 
@@ -36,6 +46,7 @@ class Tool:
     url: str = ""
     credit_line: str = ""
     notes: str = ""
+    lane: str = "catalog_only"
 
     def credited(self) -> str:
         return self.credit_line or self.name
@@ -91,6 +102,7 @@ def load_tools() -> list[Tool]:
                 url=str(raw.get("url") or ""),
                 credit_line=str(raw.get("credit_line") or raw.get("name") or raw["id"]),
                 notes=str(raw.get("notes") or ""),
+                lane=str(raw.get("lane") or "catalog_only"),
             )
         )
     return rows
@@ -109,6 +121,14 @@ def get_tool(tool_id: str) -> Tool | None:
 def credit_line(tool_id: str) -> str:
     tool = get_tool(tool_id)
     return tool.credited() if tool else tool_id
+
+
+def lane_counts() -> dict[str, int]:
+    counts = {"wrap": 0, "advisory": 0, "catalog_only": 0}
+    for tool in load_tools():
+        lane = tool.lane if tool.lane in counts else "catalog_only"
+        counts[lane] += 1
+    return counts
 
 
 def credit_for_layer(layer: str) -> str:
@@ -163,6 +183,10 @@ def incompatibility(
     core_only: bool = False,
 ) -> str | None:
     """Specific skip reason, or None if this tool can activate. Never INIT_SKIP_GENERIC."""
+    if tool.lane == "catalog_only":
+        return "structurally not wireable"
+    if tool.lane == "advisory":
+        return "advisory only — never auto-enabled"
     if tool.status != "active":
         return "not wired in v1"
     if tool.extra:

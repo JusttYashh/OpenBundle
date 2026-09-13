@@ -1,12 +1,15 @@
-"""Ordered pipeline: cache → memory → compress → provider."""
+"""Ordered pipeline: cache → compress → route → guardrails → provider → structured → eval."""
 
 from __future__ import annotations
 
 import time
 from collections.abc import AsyncIterator
 
+from openbundle.adapters.input_guard import InputGuard
+from openbundle.adapters.json_schema import JsonSchemaRetry
 from openbundle.adapters.llmlingua2 import CompressLayer
-from openbundle.adapters.mem0 import MemoryLayer
+from openbundle.adapters.prefix_router import PrefixRouter
+from openbundle.adapters.sample_eval import SampleEval
 from openbundle.config import Settings, overlay_enabled
 from openbundle.metrics.tokens import count_messages
 from openbundle.pipeline.layers.cache import CacheLayer
@@ -21,24 +24,36 @@ class Pipeline:
         settings: Settings,
         *,
         cache: CacheLayer | None = None,
-        memory: MemoryLayer | None = None,
         compress: CompressLayer | None = None,
+        routing: PrefixRouter | None = None,
+        guardrails: InputGuard | None = None,
+        structured: JsonSchemaRetry | None = None,
+        eval_layer: SampleEval | None = None,
         forwarder: ProviderForwarder | None = None,
     ) -> None:
         self.settings = settings
         self.cache = cache or CacheLayer(settings)
-        self.memory = memory or MemoryLayer(settings.layers.memory)
         self.compress = compress or CompressLayer(settings.layers.compress)
+        self.routing = routing or PrefixRouter(settings.layers.routing)
+        self.guardrails = guardrails or InputGuard(settings.layers.guardrails)
+        self.structured = structured or JsonSchemaRetry(settings.layers.structured)
+        self.eval_layer = eval_layer or SampleEval(settings.layers.eval)
         self.forwarder = forwarder or ProviderForwarder(settings)
 
     def _layers_active(self) -> list[str]:
         names: list[str] = []
         if self.settings.layers.cache.enabled:
             names.append("cache")
-        if self.settings.layers.memory.enabled:
-            names.append("memory")
         if self.settings.layers.compress.enabled:
             names.append("compress")
+        if self.settings.layers.routing.enabled:
+            names.append("routing")
+        if self.settings.layers.guardrails.enabled:
+            names.append("guardrails")
+        if self.settings.layers.structured.enabled:
+            names.append("structured")
+        if self.settings.layers.eval.enabled:
+            names.append("eval")
         return names or ["passthrough"]
 
     def prepare(
@@ -59,8 +74,9 @@ class Pipeline:
             hit.cache_hit = True
             hit.events = synthesize_events(hit)
             return request, before, hit
-        working = self.memory.apply(request)
-        working = self.compress.apply(working)
+        working = self.compress.apply(request)
+        working = self.routing.apply(working)
+        working = self.guardrails.apply(working)
         return working, before, None
 
     def finalize(
@@ -81,7 +97,9 @@ class Pipeline:
         result.protocol = request.protocol
         if result.ok and not result.provider_error and not request.passthrough and not result.cache_hit:
             self.cache.store_response(request, result)
-            result.memory_extract_tokens = self.memory.extract(request, result)
+        extra = self.eval_layer.score(result)
+        result.eval_status = extra.get("eval", "")
+        result.eval_reason = extra.get("eval_reason", "")
         return result
 
     async def run(self, request: InternalRequest) -> InternalResponse:
@@ -90,15 +108,13 @@ class Pipeline:
         if hit:
             return self.finalize(request, working, before, hit, started)
         result = await self.forwarder.forward(working)
+        if self.structured.should_retry(working, result):
+            retry_req = self.structured.retry_request(working)
+            result = await self.forwarder.forward(retry_req)
         result.stream = request.stream
         return self.finalize(request, working, before, result, started)
 
     async def stream(self, request: InternalRequest) -> tuple[InternalResponse | None, AsyncIterator[bytes]]:
-        """Prepare, then return (cache_hit_response_or_None, byte iterator).
-
-        The iterator yields SSE bytes and records the final result on
-        ``iterator.final`` after completion.
-        """
         started = time.perf_counter()
         working, before, hit = self.prepare(request)
         if hit:

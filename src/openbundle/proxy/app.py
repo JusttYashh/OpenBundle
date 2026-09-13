@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 from openbundle.config import Settings, load_settings, overlay_enabled
+from openbundle.metrics.samples import record_sample
 from openbundle.metrics.session import SessionLog
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest, InternalResponse
@@ -25,12 +26,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.session = SessionLog(settings)
 
     @app.get("/health")
-    async def health() -> dict[str, str]:
+    async def health() -> dict:
         on = overlay_enabled(settings)
+        layers = settings.layers
         return {
             "status": "ok",
             "listen": settings.listen,
             "overlay": "on" if on else "off",
+            "cache": bool(on and layers.cache.enabled),
+            "compress": bool(on and layers.compress.enabled),
+            "routing": bool(on and layers.routing.enabled),
+            "guardrails": bool(on and layers.guardrails.enabled),
+            "structured": bool(on and layers.structured.enabled),
+            "eval": bool(on and layers.eval.enabled),
+            "memory": False,
+            "memory_lane": "advisory",
         }
 
     @app.post("/v1/chat/completions")
@@ -73,6 +83,7 @@ def _error_response(result: InternalResponse) -> Response:
 async def _handle(app: FastAPI, parsed: InternalRequest) -> Response:
     pipeline: Pipeline = app.state.pipeline
     session: SessionLog = app.state.session
+    record_sample(parsed)
     if parsed.stream:
         return await _handle_stream(pipeline, session, parsed)
     result = await pipeline.run(parsed)

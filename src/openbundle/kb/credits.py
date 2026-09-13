@@ -20,10 +20,11 @@ def render_credits() -> str:
     ]
     for tool in load_tools():
         license_s = tool.license or "see project"
+        lane = tool.lane or "catalog_only"
         if tool.url:
-            lines.append(f"- [{tool.name}]({tool.url}) — {license_s}")
+            lines.append(f"- [{tool.name}]({tool.url}) — {license_s} — {lane}")
         else:
-            lines.append(f"- {tool.name} — {license_s}")
+            lines.append(f"- {tool.name} — {license_s} — {lane}")
         if tool.credit_line:
             lines.append(f"  {tool.credit_line}")
         lines.append("")

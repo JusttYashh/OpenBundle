@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openbundle"
 version = "0.1.0"
-description = "The compatibility layer for open source AI optimization tools."
+description = "The compatibility layer for open-source AI optimization tools — auto-selects, wires, and shows before/after for the ones that work together."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"

@@ -36,7 +36,6 @@ def test_init_core_only_writes_yaml(tmp_path: Path, monkeypatch):
     )
     assert result.exit_code == 0, result.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "enabled: true" in text
     assert "127.0.0.1:4180" in text
     assert "semantic: false" in text
     assert "every_n_turns: 3" in text
@@ -71,10 +70,10 @@ def test_init_with_extras_enables_named_tools(tmp_path: Path, monkeypatch):
     result = runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
     assert result.exit_code == 0, result.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "memory: mem0" in text
+    assert "memory: none" in text
     assert "compress: llmlingua2" in text
-    assert "enabled: true" in text
     assert "Mem0 (github.com/mem0ai/mem0, Apache-2.0)" in result.stdout
+    assert "Advisory" in result.stdout
     assert "LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)" in result.stdout
 
 
@@ -88,7 +87,7 @@ def test_init_skip_generic_but_config_is_specific(tmp_path: Path, monkeypatch):
     shown = runner.invoke(app, ["config", "--no-banner"])
     assert shown.exit_code == 0, shown.output
     assert INIT_SKIP_GENERIC not in shown.stdout
-    assert "extra mem0 not installed" in shown.stdout
+    assert "advisory only — never auto-enabled" in shown.stdout
     assert "extra llmlingua not installed" in shown.stdout
     assert "not wired in v1" in shown.stdout
 
@@ -99,47 +98,69 @@ def test_select_uses_installed_extras():
     assert skipped.memory == "none"
     assert skipped.compress == "none"
     assert skipped.cache == "sqlite_exact"
-    on = select(scan, ["mem0", "llmlingua"], core_only=False)
-    assert on.memory == "mem0"
+    assert skipped.live["memory"] is False
+    on = select(scan, ["mem0", "llmlingua"], core_only=False, allow_lossy=True)
+    assert on.memory == "none"
+    assert on.live["memory"] is False
     assert on.compress == "llmlingua2"
+    assert on.live["compress"] is True
+    cold = select(scan, ["mem0", "llmlingua"], core_only=False, allow_lossy=False)
+    assert cold.memory == "none"
+    assert cold.compress == "llmlingua2"
+    assert cold.live["compress"] is False
+    assert cold.live["cache"] is True
     forced = select(scan, ["mem0", "llmlingua"], core_only=True)
     assert forced.memory == "none"
     assert forced.compress == "none"
 
 
-def test_toggle_flips_enabled(tmp_path: Path, monkeypatch):
+def test_on_off_writes_overlay_yaml(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    _isolate_state(tmp_path, monkeypatch)
+    state = _isolate_state(tmp_path, monkeypatch)
     _no_extras(monkeypatch)
     runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
-    first = runner.invoke(app, [])
+    first = runner.invoke(app, ["off"])
     assert first.exit_code == 0, first.output
     assert "Overlay off" in first.stdout
     assert "not touched" in first.stdout
-    text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "enabled: false" in text
-    second = runner.invoke(app, [])
+    overlay = (state / "overlay.yaml").read_text(encoding="utf-8")
+    assert "enabled: false" in overlay
+    import yaml
+
+    yaml_doc = yaml.safe_load((tmp_path / "openbundle.yaml").read_text(encoding="utf-8"))
+    assert "enabled" not in yaml_doc
+    second = runner.invoke(app, ["on"])
     assert second.exit_code == 0, second.output
     assert "Overlay on" in second.stdout
-    text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
-    assert "enabled: true" in text
+    overlay = (state / "overlay.yaml").read_text(encoding="utf-8")
+    assert "enabled: true" in overlay
 
 
-def test_toggle_without_config(tmp_path: Path, monkeypatch):
+def test_on_announces_env_override(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _isolate_state(tmp_path, monkeypatch)
+    monkeypatch.setenv("OPENBUNDLE_ENABLED", "false")
+    result = runner.invoke(app, ["on"])
+    assert result.exit_code == 0, result.output
+    assert "OPENBUNDLE_ENABLED=false" in result.stdout
+
+
+def test_bare_command_is_help(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _isolate_state(tmp_path, monkeypatch)
     result = runner.invoke(app, [])
-    assert result.exit_code == 2
-    assert "init" in result.output.lower()
+    assert result.exit_code in {0, 2}
+    assert "Usage" in result.output or "init" in result.output
 
 
-def test_config_set_memory_off_and_compress(tmp_path: Path, monkeypatch):
+def test_config_set_refuses_memory_and_sets_compress(tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     _isolate_state(tmp_path, monkeypatch)
     monkeypatch.setattr("openbundle.cli.installed_extras", lambda: ["mem0", "llmlingua"])
     runner.invoke(app, ["init", "--no-banner", "-o", str(tmp_path / "openbundle.yaml")])
-    off = runner.invoke(app, ["config", "set", "memory", "off", "--no-banner"])
-    assert off.exit_code == 0, off.output
+    mem = runner.invoke(app, ["config", "set", "memory", "mem0", "--no-banner"])
+    assert mem.exit_code == 2
+    assert "advisory" in mem.output.lower()
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
     assert "memory: none" in text
     sett = runner.invoke(app, ["config", "set", "compress", "llmlingua2", "--no-banner"])

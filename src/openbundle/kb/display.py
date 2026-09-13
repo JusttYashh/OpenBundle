@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
-from openbundle.kb.catalog import INIT_SKIP_GENERIC, WRAP_CATEGORIES, credit_line, get_tool
+from openbundle.kb.catalog import (
+    ADVISORY_CATEGORIES,
+    ALL_PICK_CATEGORIES,
+    INIT_SKIP_GENERIC,
+    WRAP_CATEGORIES,
+    credit_line,
+    get_tool,
+)
 from openbundle.kb.select import Selection, explain_category
 
 CATEGORY_LABEL = {
     "cache": "cache",
-    "memory": "memory",
     "compress": "compression",
+    "routing": "routing",
+    "guardrails": "guardrails",
+    "structured": "structured",
+    "eval": "eval",
+    "memory": "memory",
 }
 
 
@@ -17,12 +28,19 @@ def format_init_summary(choice: Selection) -> str:
     for category in WRAP_CATEGORIES:
         label = f"{CATEGORY_LABEL[category]:<12}"
         tool_id = getattr(choice, category)
-        if tool_id and tool_id != "none":
+        live = choice.live.get(category, False)
+        if tool_id and tool_id != "none" and live:
             lines.append(f"  ✓ {label} → {credit_line(tool_id)}")
+        elif tool_id and tool_id != "none":
+            lines.append(f"  ○ {label} → {credit_line(tool_id)} (waiting for traffic sample)")
         else:
             lines.append(f"  ✗ {label} → skipped ({INIT_SKIP_GENERIC})")
     lines.extend(
         [
+            "",
+            "Advisory (never auto-enabled):",
+            "  memory       → Mem0 (github.com/mem0ai/mem0, Apache-2.0)",
+            "                 pip install openbundle[mem0]  — add it in your own code.",
             "",
             "OpenBundle does not replace these tools — it selects, configures, and",
             "runs them together for you. Full credits: CREDITS.md",
@@ -37,8 +55,8 @@ def format_config_view(
     active: dict[str, str],
     core_only: bool = False,
 ) -> str:
-    chosen = [active[c] for c in WRAP_CATEGORIES if active.get(c) not in (None, "", "none")]
-    blocks: list[str] = []
+    wrap_ids = [active[c] for c in WRAP_CATEGORIES if active.get(c) not in (None, "", "none")]
+    blocks: list[str] = ["Wrap-eligible:"]
     for category in WRAP_CATEGORIES:
         current = active.get(category) or "none"
         title = CATEGORY_LABEL[category]
@@ -47,7 +65,7 @@ def format_config_view(
         else:
             head = f"{title}: off"
         lines = [head]
-        others = chosen if current == "none" else [c for c in chosen if c != current]
+        others = wrap_ids if current == "none" else [c for c in wrap_ids if c != current]
         for tool, why in explain_category(category, extras, chosen=others, core_only=core_only):
             if why:
                 lines.append(f"  - {tool.id:<18} {why}")
@@ -56,34 +74,41 @@ def format_config_view(
             else:
                 lines.append(f"  - {tool.id:<18} available  {tool.credited()}")
         blocks.append("\n".join(lines))
+    blocks.append("Advisory:")
+    for category in ADVISORY_CATEGORIES:
+        lines = [f"{CATEGORY_LABEL[category]}: off (never auto-enabled)"]
+        for tool, why in explain_category(category, extras, core_only=core_only):
+            lines.append(f"  - {tool.id:<18} {why or 'advisory only — never auto-enabled'}")
+        blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
 
 def apply_bundle_to_doc(doc: dict, category: str, tool_id: str) -> None:
     bundle = doc.setdefault("bundle", {})
     layers = doc.setdefault("layers", {})
+    if category == "memory":
+        bundle["memory"] = "none"
+        layers.setdefault("memory", {})["enabled"] = False
+        return
+    bundle[category] = tool_id
+    layer = layers.setdefault(category if category != "compress" else "compress", {})
     if category == "cache":
-        bundle["cache"] = tool_id
         layers.setdefault("cache", {})["enabled"] = tool_id != "none"
-    elif category == "memory":
-        bundle["memory"] = tool_id
-        memory = layers.setdefault("memory", {})
-        memory["enabled"] = tool_id != "none"
-        memory["adapter"] = "mem0" if tool_id == "mem0" else "summary"
     elif category == "compress":
-        bundle["compress"] = tool_id
-        compress = layers.setdefault("compress", {})
-        compress["enabled"] = tool_id != "none"
-        compress["adapter"] = "llmlingua2" if tool_id == "llmlingua2" else tool_id
+        layers.setdefault("compress", {})["enabled"] = tool_id != "none"
+        layers["compress"]["adapter"] = "llmlingua2" if tool_id == "llmlingua2" else tool_id
+    else:
+        layer["enabled"] = tool_id != "none"
+        if tool_id != "none":
+            layer["adapter"] = tool_id
 
 
 def active_from_doc(doc: dict) -> dict[str, str]:
     bundle = doc.get("bundle") or {}
-    return {
-        "cache": str(bundle.get("cache") or "none"),
-        "memory": str(bundle.get("memory") or "none"),
-        "compress": str(bundle.get("compress") or "none"),
-    }
+    out = {}
+    for key in ALL_PICK_CATEGORIES:
+        out[key] = str(bundle.get(key) or "none")
+    return out
 
 
 def get_tool_or_none(tool_id: str):

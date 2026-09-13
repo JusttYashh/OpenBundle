@@ -1,4 +1,4 @@
-"""openbundle CLI: init / toggle / config / serve / report / doctor."""
+"""openbundle CLI: init / on / off / check / config / serve / report / doctor."""
 
 from __future__ import annotations
 
@@ -18,13 +18,14 @@ from openbundle.config import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     BindError,
+    env_overlay_set,
     find_config_file,
     load_settings,
     overlay_enabled,
     read_config_doc,
-    set_enabled,
     validate_bind,
     write_config_doc,
+    write_overlay_enabled,
 )
 from openbundle.init.install import (
     collect_uninstall_targets,
@@ -33,7 +34,6 @@ from openbundle.init.install import (
     remove_paths,
 )
 from openbundle.init.scan import installed_extras, scan_env
-from openbundle.kb.catalog import WRAP_CATEGORIES, credit_line, get_tool, incompatibility
 from openbundle.kb.credits import write_credits
 from openbundle.kb.display import (
     active_from_doc,
@@ -41,7 +41,10 @@ from openbundle.kb.display import (
     format_config_view,
     format_init_summary,
 )
+from openbundle.kb.catalog import WRAP_CATEGORIES, credit_line, get_tool, incompatibility
 from openbundle.kb.select import select
+from openbundle.metrics.samples import has_samples
+from openbundle.metrics.smoke import allow_lossy_layers, smoke_check_compress
 from openbundle.metrics.cost import lookup_model, stale_rows
 from openbundle.metrics.report import print_report
 from openbundle.metrics.session import SessionLog
@@ -51,8 +54,7 @@ from openbundle.update import check_update, pip_upgrade
 
 app = typer.Typer(
     add_completion=False,
-    no_args_is_help=False,
-    invoke_without_command=True,
+    no_args_is_help=True,
     help="OpenBundle optimization overlay.",
 )
 config_app = typer.Typer(help="Show or swap overlay tools.", invoke_without_command=True)
@@ -63,11 +65,8 @@ def _banner(no_banner: bool, compact: bool = False) -> None:
 
 
 def _write_config(output: Path, choice) -> None:
-    memory_enabled = choice.memory != "none"
-    compress_enabled = choice.compress != "none"
-    cache_enabled = choice.cache != "none"
+    live = choice.live
     doc = {
-        "enabled": True,
         "listen": f"{DEFAULT_HOST}:{DEFAULT_PORT}",
         "providers": {
             "anthropic": {
@@ -81,15 +80,41 @@ def _write_config(output: Path, choice) -> None:
         },
         "bundle": {
             "cache": choice.cache,
-            "memory": choice.memory,
             "compress": choice.compress,
+            "routing": choice.routing,
+            "guardrails": choice.guardrails,
+            "structured": choice.structured,
+            "eval": choice.eval,
+            "memory": "none",
         },
         "layers": {
-            "cache": {"enabled": cache_enabled, "semantic": False},
+            "cache": {"enabled": live.get("cache", False), "semantic": False},
+            "compress": {
+                "enabled": live.get("compress", False),
+                "rate": 0.5,
+                "skip_cache_control": True,
+                "adapter": "llmlingua2" if choice.compress == "llmlingua2" else choice.compress,
+            },
+            "routing": {
+                "enabled": live.get("routing", False),
+                "adapter": choice.routing,
+            },
+            "guardrails": {
+                "enabled": live.get("guardrails", False),
+                "adapter": choice.guardrails,
+            },
+            "structured": {
+                "enabled": live.get("structured", False),
+                "adapter": choice.structured,
+            },
+            "eval": {
+                "enabled": live.get("eval", False),
+                "adapter": choice.eval,
+            },
             "memory": {
-                "enabled": memory_enabled,
+                "enabled": False,
                 "user_id": "local",
-                "adapter": "mem0" if choice.memory == "mem0" else "summary",
+                "adapter": "mem0",
                 "extract": {
                     "every_n_turns": 3,
                     "min_interval_seconds": 15,
@@ -97,32 +122,18 @@ def _write_config(output: Path, choice) -> None:
                     "skip_if_user_tokens_below": 50,
                 },
             },
-            "compress": {
-                "enabled": compress_enabled,
-                "rate": 0.5,
-                "skip_cache_control": True,
-                "adapter": "llmlingua2",
-            },
         },
     }
     output.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
     record_config_file(output)
 
 
-def _toggle() -> None:
-    path = find_config_file()
-    if path is None:
-        typer.echo("No openbundle.yaml found. Run `openbundle init` first.", err=True)
-        raise typer.Exit(code=2)
-    doc = read_config_doc(path)
-    current = bool(doc.get("enabled", True))
-    nxt = not current
-    set_enabled(path, nxt)
-    if nxt:
-        typer.echo("Overlay on. Layers run on http://127.0.0.1:4180.")
-    else:
-        typer.echo("Overlay off. Same attach URL; requests passthrough.")
-    typer.echo("Repo and source were not touched.")
+def _env_conflict_note() -> None:
+    if env_overlay_set():
+        typer.echo(
+            f"OPENBUNDLE_ENABLED={os.environ.get('OPENBUNDLE_ENABLED')} is set and "
+            "overrides overlay.yaml until you unset it."
+        )
 
 
 def _credited_bundle(doc: dict) -> str:
@@ -135,10 +146,52 @@ def _credited_bundle(doc: dict) -> str:
     return ", ".join(parts) if parts else "passthrough"
 
 
-@app.callback(invoke_without_command=True)
-def _root(ctx: typer.Context) -> None:
-    if ctx.invoked_subcommand is None:
-        _toggle()
+@app.command("on")
+def overlay_on() -> None:
+    """Turn the overlay on. Same attach URL; repo is not touched."""
+    write_overlay_enabled(True)
+    typer.echo("Overlay on. Layers run on http://127.0.0.1:4180.")
+    typer.echo("Repo and source were not touched. Same attach URL still works.")
+    _env_conflict_note()
+
+
+@app.command("off")
+def overlay_off() -> None:
+    """Turn the overlay off. Same attach URL; requests passthrough."""
+    write_overlay_enabled(False)
+    typer.echo("Overlay off. Same attach URL; requests passthrough.")
+    typer.echo("Repo and source were not touched.")
+    _env_conflict_note()
+
+
+@app.command("check")
+def check(
+    config: Optional[Path] = typer.Option(None, "--config", "-c"),
+    no_banner: bool = typer.Option(False, "--no-banner"),
+) -> None:
+    """Smoke-check wrap extras against logged samples and enable layers that pass."""
+    _banner(no_banner)
+    path = config or find_config_file()
+    if path is None:
+        typer.echo("No openbundle.yaml found. Run `openbundle init` first.", err=True)
+        raise typer.Exit(code=2)
+    if not has_samples():
+        typer.echo(
+            "No local samples yet. Only lossless cache is live until traffic is logged."
+        )
+        typer.echo("Point a client at http://127.0.0.1:4180, send a few requests, then re-run.")
+        raise typer.Exit(code=1)
+    extras = installed_extras()
+    scan = scan_env()
+    choice = select(scan, extras, allow_lossy=True)
+    if choice.compress == "llmlingua2" and not smoke_check_compress():
+        choice.compress = "none"
+        choice.live["compress"] = False
+        typer.echo("compress skipped: smoke-check failed on local samples.")
+    _write_config(path, choice)
+    write_credits(Path.cwd() / "CREDITS.md")
+    typer.echo(format_init_summary(choice))
+    typer.echo("Smoke-check applied. Repo and source were not touched.")
 
 
 @app.command()
@@ -153,12 +206,30 @@ def init(
         scan = scan_env()
         extras = [] if core_only else installed_extras()
     with Pulse("Selecting tools", show_logo=False):
-        choice = select(scan, extras, core_only=core_only)
+        choice = select(scan, extras, core_only=core_only, allow_lossy=allow_lossy_layers())
+        if (
+            choice.live.get("compress")
+            and choice.compress == "llmlingua2"
+            and not smoke_check_compress()
+        ):
+            choice.compress = "none"
+            choice.live["compress"] = False
+            if "compress" in choice.details:
+                choice.details["compress"].tool_id = "none"
+                choice.details["compress"].live = False
     with Pulse("Writing config", show_logo=False):
         _write_config(output, choice)
         write_credits(Path.cwd() / "CREDITS.md")
+        write_overlay_enabled(True)
     typer.echo(format_init_summary(choice))
     typer.echo("")
+    if not allow_lossy_layers():
+        typer.echo(
+            "Cold start: only lossless cache is live. Send traffic through the overlay, "
+            "then `openbundle check` to enable compression, routing, guardrails, "
+            "structured output, and sampled eval."
+        )
+        typer.echo("")
     if not scan.anthropic_key and not scan.openai_key:
         typer.echo("No ANTHROPIC_API_KEY or OPENAI_API_KEY in the environment.")
     typer.echo("Attach your client:")
@@ -166,6 +237,7 @@ def init(
     typer.echo(f"  # or OpenAI: base_url=http://{DEFAULT_HOST}:{DEFAULT_PORT}/v1")
     typer.echo("")
     typer.echo("Then:  openbundle serve")
+    typer.echo("Toggle: openbundle on | openbundle off")
 
 
 @config_app.callback(invoke_without_command=True)
@@ -178,7 +250,15 @@ def config_root(ctx: typer.Context, no_banner: bool = typer.Option(False, "--no-
     if path is None:
         scan = scan_env()
         choice = select(scan, extras)
-        active = {"cache": choice.cache, "memory": choice.memory, "compress": choice.compress}
+        active = {
+            "cache": choice.cache,
+            "compress": choice.compress,
+            "routing": choice.routing,
+            "guardrails": choice.guardrails,
+            "structured": choice.structured,
+            "eval": choice.eval,
+            "memory": "none",
+        }
     else:
         active = active_from_doc(read_config_doc(path))
     typer.echo(format_config_view(extras, active=active))
@@ -186,16 +266,27 @@ def config_root(ctx: typer.Context, no_banner: bool = typer.Option(False, "--no-
 
 @config_app.command("set")
 def config_set(
-    category: str = typer.Argument(help="cache | memory | compress"),
+    category: str = typer.Argument(help="cache | compress | routing | guardrails | structured | eval"),
     tool: str = typer.Argument(help="Tool id, or off / none"),
     no_banner: bool = typer.Option(False, "--no-banner"),
 ) -> None:
-    """Swap one category to a wired tool, or off."""
+    """Swap one wrap category to a wired tool, or off."""
     _banner(no_banner, compact=True)
     alias = {"compression": "compress", "caching": "cache"}
     category = alias.get(category, category)
+    if category == "memory":
+        typer.echo(
+            "Memory is advisory only — never auto-enabled. "
+            "Add Mem0 (github.com/mem0ai/mem0, Apache-2.0) in your own code: "
+            "pip install openbundle[mem0]",
+            err=True,
+        )
+        raise typer.Exit(code=2)
     if category not in WRAP_CATEGORIES:
-        typer.echo(f"Unknown category {category}. Use cache, memory, or compress.", err=True)
+        typer.echo(
+            f"Unknown category {category}. Use {', '.join(WRAP_CATEGORIES)}.",
+            err=True,
+        )
         raise typer.Exit(code=2)
     tool_id = "none" if tool in {"off", "none", "disabled"} else tool
     path = find_config_file()
@@ -247,6 +338,10 @@ def serve(
         settings.layers.cache.enabled = False
         settings.layers.memory.enabled = False
         settings.layers.compress.enabled = False
+        settings.layers.routing.enabled = False
+        settings.layers.guardrails.enabled = False
+        settings.layers.structured.enabled = False
+        settings.layers.eval.enabled = False
     bind_host = host or settings.host
     bind_port = port or settings.port
     try:

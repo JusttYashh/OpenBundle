@@ -37,6 +37,8 @@ class SessionLog:
             "layers": response.layers,
             "provider_error": response.provider_error,
             "client_cancelled": response.client_cancelled,
+            "eval": response.eval_status,
+            "eval_reason": response.eval_reason,
         }
         if extra:
             event.update(extra)

@@ -1,4 +1,4 @@
-from openbundle.config import Settings, overlay_enabled
+from openbundle.config import Settings, overlay_enabled, write_overlay_enabled
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest
 
@@ -22,11 +22,8 @@ def test_overlay_enabled_env(tmp_settings: Settings, monkeypatch):
     assert overlay_enabled(tmp_settings) is True
 
 
-def test_prepare_passthrough_when_overlay_off(tmp_settings: Settings, tmp_path):
-    cfg = tmp_path / "openbundle.yaml"
-    cfg.write_text("enabled: false\n", encoding="utf-8")
-    tmp_settings.config_path = str(cfg)
-    tmp_settings.enabled = True
+def test_prepare_passthrough_when_overlay_off(tmp_settings: Settings):
+    write_overlay_enabled(False)
     pipeline = Pipeline(tmp_settings)
     working, _before, hit = pipeline.prepare(_req())
     assert working.passthrough is True

@@ -49,16 +49,44 @@ class CompressLayerConfig(BaseModel):
     adapter: str = "llmlingua2"
 
 
+class RoutingLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "prefix_router"
+
+
+class GuardrailsLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "input_guard"
+
+
+class StructuredLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "json_schema"
+
+
+class EvalLayerConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "sample_eval"
+
+
 class LayersConfig(BaseModel):
     cache: CacheLayerConfig = Field(default_factory=CacheLayerConfig)
     memory: MemoryLayerConfig = Field(default_factory=MemoryLayerConfig)
     compress: CompressLayerConfig = Field(default_factory=CompressLayerConfig)
+    routing: RoutingLayerConfig = Field(default_factory=RoutingLayerConfig)
+    guardrails: GuardrailsLayerConfig = Field(default_factory=GuardrailsLayerConfig)
+    structured: StructuredLayerConfig = Field(default_factory=StructuredLayerConfig)
+    eval: EvalLayerConfig = Field(default_factory=EvalLayerConfig)
 
 
 class BundleConfig(BaseModel):
     cache: str = "sqlite_exact"
     memory: str = "none"
     compress: str = "none"
+    routing: str = "none"
+    guardrails: str = "none"
+    structured: str = "none"
+    eval: str = "none"
 
 
 class ProvidersConfig(BaseModel):
@@ -116,6 +144,10 @@ def state_dir() -> Path:
 
 def install_record_path() -> Path:
     return state_dir() / "install-record.yaml"
+
+
+def overlay_path() -> Path:
+    return state_dir() / "overlay.yaml"
 
 
 def resolve_secret(value: str) -> str:
@@ -186,33 +218,41 @@ def find_config_file() -> Path | None:
 
 
 def overlay_enabled(settings: Settings | None = None) -> bool:
-    """Env > --passthrough > yaml enabled (hot-read if config_path set) > settings.enabled."""
+    """Env > --passthrough > ~/.openbundle/overlay.yaml > default on."""
     forced = _env_overlay()
     if forced is not None:
         return forced
     if settings is not None and settings.passthrough:
         return False
-    if settings is not None and settings.config_path:
-        path = Path(settings.config_path)
-        if path.is_file():
-            try:
-                data = _read_yaml(path)
-            except Exception:
-                data = {}
-            if "enabled" in data:
-                return bool(data["enabled"])
-        return bool(settings.enabled)
-    if settings is not None:
-        return bool(settings.enabled)
-    path = find_config_file()
-    if path is not None:
+    path = overlay_path()
+    if path.is_file():
         try:
             data = _read_yaml(path)
         except Exception:
             data = {}
         if "enabled" in data:
             return bool(data["enabled"])
+    if settings is not None:
+        return bool(settings.enabled)
     return True
+
+
+def env_overlay_set() -> bool:
+    return _env_overlay() is not None
+
+
+def write_overlay_enabled(enabled: bool) -> Path:
+    path = overlay_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing: dict[str, Any] = {}
+    if path.is_file():
+        try:
+            existing = _read_yaml(path)
+        except Exception:
+            existing = {}
+    existing["enabled"] = enabled
+    write_config_doc(path, existing)
+    return path
 
 
 def read_config_doc(path: Path) -> dict[str, Any]:

@@ -25,4 +25,11 @@ def test_anthropic_json(bundle_client):
 def test_health(bundle_client):
     response = bundle_client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["overlay"] in {"on", "off"}
+    for key in ("cache", "compress", "routing", "guardrails", "structured", "eval"):
+        assert key in body
+        assert isinstance(body[key], bool)
+    assert body["memory"] is False
+    assert body["memory_lane"] == "advisory"

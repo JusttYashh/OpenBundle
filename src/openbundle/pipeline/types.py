@@ -65,3 +65,5 @@ class InternalResponse:
     layers: list[str] = field(default_factory=list)
     provider_error: bool = False
     client_cancelled: bool = False
+    eval_status: str = ""
+    eval_reason: str = ""

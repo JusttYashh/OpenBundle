@@ -13,21 +13,11 @@ profiles:
     mem0: mem0
     llmlingua: llmlingua2
 
-# Resolver walk order per wrap category. First compatible active tool wins.
 candidates:
   cache:
     - sqlite_exact
     - gptcache
     - lmcache
-    - vllm
-    - sglang
-  memory:
-    - mem0
-    - supermemory
-    - letta
-    - zep
-    - langmem
-    - cognee
   compress:
     - llmlingua2
     - llmlingua
@@ -35,3 +25,36 @@ candidates:
     - selective_context
     - autocompressor
     - recomp
+    - pctoolkit
+  routing:
+    - prefix_router
+    - openrouter
+    - routellm
+    - litellm
+  guardrails:
+    - input_guard
+    - llm_guard
+    - guardrails_ai
+    - nemo_guardrails
+    - rebuff
+    - securitylingua
+  structured:
+    - json_schema
+    - instructor
+    - pydantic_ai
+    - baml
+    - mirascope
+  eval:
+    - sample_eval
+    - promptfoo
+    - deepeval
+    - ragas
+    - trulens
+    - openbench
+  memory:
+    - mem0
+    - supermemory
+    - letta
+    - zep
+    - langmem
+    - cognee

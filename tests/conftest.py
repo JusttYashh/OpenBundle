@@ -10,6 +10,12 @@ from openbundle.proxy.forward import ProviderForwarder
 from tests.mock_provider import MockState, build_mock_provider
 
 
+@pytest.fixture(autouse=True)
+def _isolate_openbundle_home(tmp_path, monkeypatch):
+    state = tmp_path / "ob-home"
+    monkeypatch.setattr("openbundle.config.state_dir", lambda: state)
+
+
 @pytest.fixture
 def tmp_settings(tmp_path) -> Settings:
     settings = Settings()
