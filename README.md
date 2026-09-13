@@ -1,6 +1,13 @@
 <p align="center">
-  <img src="openbundlelogo.png" alt="OpenBundle" width="480">
+  <img src="openbundle-logo-horizontal-dark.svg" alt="openbundle" width="480">
 </p>
+
+<p align="center">
+  <strong>~20× fewer prompt tokens out of the box</strong><br>
+  <strong>15–40× cost · 6–8× memory</strong> if you add memory and quantization yourself
+</p>
+
+<p align="center">Your number is <code>openbundle report</code> on this traffic.</p>
 
 <h3 align="center">One install. A local proxy that auto-wires the open-source LLM optimizations that actually help — and shows you the receipts.</h3>
 

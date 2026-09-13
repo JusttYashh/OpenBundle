@@ -6,7 +6,7 @@ import os
 import sys
 import threading
 
-from openbundle.banner import BANNER_RED, RESET, WORDMARK
+from openbundle.banner import OPEN_GREY, RESET, paint_wordmark
 
 BAR_WIDTH = 28
 _HIDE_CURSOR = "\033[?25l"
@@ -23,14 +23,12 @@ def _color_enabled() -> bool:
 
 def _paint(text: str) -> str:
     if _color_enabled():
-        return f"{BANNER_RED}{text}{RESET}"
+        return f"{OPEN_GREY}{text}{RESET}"
     return text
 
 
 def _wordmark() -> str:
-    if not _color_enabled():
-        return WORDMARK
-    return "\n".join(f"{BANNER_RED}{line}{RESET}" for line in WORDMARK.splitlines())
+    return paint_wordmark(color=_color_enabled())
 
 
 def _bar(filled: int) -> str:
