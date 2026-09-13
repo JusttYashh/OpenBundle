@@ -18,3 +18,7 @@ htmlcov/
 openbundle.yaml
 .cursor/
 uploads/
+planpitch.txt
+opensrcsoftwares.txt
+*.txt
+!requirements*.txt
