@@ -2,153 +2,144 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-
-from openbundle.kb.catalog import lane_counts, load_tools
+from openbundle.kb.catalog import job_headline_counts, load_tools
+from openbundle.pipeline.jobs import HOSTED_JOBS, SELF_HOSTED_JOBS
 
 START = "<!-- CATALOG:START -->"
 END = "<!-- CATALOG:END -->"
+HERO_START = "<!-- HERO:START -->"
+HERO_END = "<!-- HERO:END -->"
 
-LEAD_CATEGORIES = (
-    "caching",
-    "coalesce",
-    "prompt_caching",
-    "prompt_compression",
-    "agent_memory",
-    "context_management",
-    "routing",
-    "guardrails",
-    "evaluation",
-    "structured_output",
-    "batch",
-)
-CATEGORY_TITLES = {
-    "caching": "Cache",
-    "coalesce": "Coalesce",
-    "prompt_caching": "Prompt cache",
-    "agent_memory": "Memory",
-    "prompt_compression": "Compression",
-    "context_management": "Context",
-    "routing": "Routing",
-    "guardrails": "Guardrails",
-    "evaluation": "Evaluation",
-    "structured_output": "Structured output",
-    "batch": "Batch",
-    "observability": "Reporting",
-}
-LANE_TITLES = {
-    "wrap": "Wired and coming next",
-    "advisory": "You add this yourself",
-}
-
-
-def _title(category: str) -> str:
-    return CATEGORY_TITLES.get(category, category.replace("_", " ").title())
-
-
-def _status_cell(status: str) -> str:
-    if status == "active":
-        return "on today"
-    return "coming next"
-
-
-def _name_cell(name: str, url: str) -> str:
-    if url:
-        return f"[{name}]({url})"
-    return name
+def lane_titles() -> dict[str, str]:
+    hosted, self_hosted, _advisory = job_headline_counts()
+    return {
+        "hosted": f"{hosted} jobs for hosted APIs",
+        "self_hosted": f"{self_hosted} more if you run local inference",
+        "advisory": "Advisory — not on the live path",
+    }
 
 
 def shipping_tools():
-    return [tool for tool in load_tools() if tool.lane in {"wrap", "advisory"}]
+    return [
+        tool
+        for tool in load_tools()
+        if tool.role == "primary" or tool.lane == "advisory"
+    ]
 
 
 def catalog_counts() -> tuple[int, int, int]:
-    tools = shipping_tools()
-    categories: set[str] = set()
-    active = 0
-    for tool in tools:
-        categories.update(tool.categories)
-        if tool.status == "active":
-            active += 1
-    return len(tools), len(categories), active
+    hosted, self_hosted, advisory = job_headline_counts()
+    return hosted, self_hosted, advisory
+
+
+def render_hero_line() -> str:
+    hosted, self_hosted, _advisory = job_headline_counts()
+    total = hosted + self_hosted
+    return (
+        f"**{hosted} hosted-API jobs + {self_hosted} self-hosted = {total} named tools.** "
+        "`openbundle status` is the live number on this traffic — not a multiplied ceiling.\n"
+    )
 
 
 def render_readme_summary() -> str:
-    n_tools, n_cats, n_active = catalog_counts()
-    lanes = lane_counts()
+    hosted, self_hosted, advisory = job_headline_counts()
     return (
-        f"**{n_tools} tools we ship or recommend** across **{n_cats}** categories — "
-        f"**{n_active}** on today, {lanes['advisory']} you add yourself (Batch API). "
-        "Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).\n"
+        f"**{hosted} live jobs** for hosted-API users, **{self_hosted}** more if self-hosted "
+        f"inference is detected, plus **{advisory}** advisory tools (memory + batch). "
+        f"`openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · "
+        "credits: [CREDITS.md](CREDITS.md).\n"
     )
 
 
 def render_catalog_block() -> str:
-    n_tools, n_cats, n_active = catalog_counts()
+    hosted, self_hosted, advisory = job_headline_counts()
     lines = [
         (
-            f"OpenBundle ships or recommends **{n_tools}** tools across **{n_cats}** categories. "
-            f"**{n_active}** are wired today."
+            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{self_hosted}** "
+            f"if local inference is detected. **{advisory}** tools are advisory (never in the live path)."
         ),
         "",
     ]
-    lines.extend(_lane_tables("###"))
+    lines.extend(_job_tables("###"))
     return "\n".join(lines).rstrip() + "\n"
 
 
 def render_catalog_page() -> str:
-    n_tools, n_cats, n_active = catalog_counts()
+    hosted, self_hosted, advisory = job_headline_counts()
     lines = [
         "# Catalog",
         "",
         (
-            f"OpenBundle ships or recommends **{n_tools}** tools across **{n_cats}** categories. "
-            f"**{n_active}** are wired today."
+            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{self_hosted}** "
+            f"if local inference is detected. **{advisory}** tools are advisory (never in the live path)."
         ),
         "",
     ]
-    lines.extend(_lane_tables("##"))
+    lines.extend(_job_tables("##"))
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _lane_tables(heading: str) -> list[str]:
-    by_lane: dict[str, list] = defaultdict(list)
-    for tool in shipping_tools():
-        by_lane[tool.lane].append(tool)
+def _job_tables(heading: str) -> list[str]:
+    by_id = {tool.id: tool for tool in load_tools()}
+    titles = lane_titles()
     lines: list[str] = []
-    for lane in ("wrap", "advisory"):
-        rows = by_lane.get(lane) or []
-        if not rows:
+
+    lines.append(f"{heading} {titles['hosted']}")
+    lines.append("")
+    lines.append("| Job | Tool | License | Tier |")
+    lines.append("|---|---|---|---|")
+    for job in HOSTED_JOBS:
+        tool = by_id.get(job.tool_id)
+        if tool is None:
             continue
-        lines.append(f"{heading} {LANE_TITLES[lane]}")
-        lines.append("")
-        grouped: dict[str, list] = defaultdict(list)
-        for tool in rows:
-            for category in tool.categories:
-                grouped[category].append(tool)
-        ordered = [c for c in LEAD_CATEGORIES if c in grouped]
-        ordered.extend(sorted(c for c in grouped if c not in LEAD_CATEGORIES))
-        for category in ordered:
-            cat_rows = grouped[category]
-            cat_rows.sort(key=lambda t: (0 if t.status == "active" else 1, t.name.lower()))
-            sub = "####" if heading == "###" else "###"
-            lines.append(f"{sub} {_title(category)}")
-            lines.append("")
-            lines.append("| Tool | License | Status |")
-            lines.append("|---|---|---|")
-            for tool in cat_rows:
-                license_s = tool.license or "see project"
-                lines.append(
-                    f"| {_name_cell(tool.name, tool.url)} | {license_s} | {_status_cell(tool.status)} |"
-                )
-            lines.append("")
+        name = f"[{tool.name}]({tool.url})" if tool.url else tool.name
+        lines.append(f"| {job.label} | {name} | {tool.license or 'see project'} | {job.tier} |")
+    lines.append("")
+
+    lines.append(f"{heading} {titles['self_hosted']}")
+    lines.append("")
+    lines.append("LMCache, kvcached, and KVzip are not verified to work together.")
+    lines.append("")
+    lines.append("| Job | Tool | License |")
+    lines.append("|---|---|---|")
+    for job in SELF_HOSTED_JOBS:
+        tool = by_id.get(job.tool_id)
+        if tool is None:
+            continue
+        name = f"[{tool.name}]({tool.url})" if tool.url else tool.name
+        lines.append(f"| {job.label} | {name} | {tool.license or 'see project'} |")
+    lines.append("")
+
+    lines.append(f"{heading} {titles['advisory']}")
+    lines.append("")
+    lines.append("| Tool | License |")
+    lines.append("|---|---|")
+    for tool in load_tools():
+        if tool.lane != "advisory":
+            continue
+        name = f"[{tool.name}]({tool.url})" if tool.url else tool.name
+        lines.append(f"| {name} | {tool.license or 'see project'} |")
+    lines.append("")
     return lines
+
+
+def _replace_section(readme: str, start: str, end: str, body: str) -> str:
+    if start not in readme or end not in readme:
+        raise ValueError(f"README.md must contain {start} and {end} markers")
+    before, rest = readme.split(start, 1)
+    _old, after = rest.split(end, 1)
+    return f"{before}{start}\n{body}{end}{after}"
 
 
 def replace_catalog_section(readme: str, block: str | None = None) -> str:
     body = block if block is not None else render_readme_summary()
-    if START not in readme or END not in readme:
-        raise ValueError(f"README.md must contain {START} and {END} markers")
-    before, rest = readme.split(START, 1)
-    _old, after = rest.split(END, 1)
-    return f"{before}{START}\n{body}{END}{after}"
+    return _replace_section(readme, START, END, body)
+
+
+def replace_hero_section(readme: str, block: str | None = None) -> str:
+    body = block if block is not None else render_hero_line()
+    return _replace_section(readme, HERO_START, HERO_END, body)
+
+
+def replace_generated_sections(readme: str) -> str:
+    return replace_catalog_section(replace_hero_section(readme))

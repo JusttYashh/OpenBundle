@@ -67,3 +67,5 @@ class InternalResponse:
     client_cancelled: bool = False
     eval_status: str = ""
     eval_reason: str = ""
+    nemo_rail_tokens: int = 0
+    fail_open: list[str] = field(default_factory=list)

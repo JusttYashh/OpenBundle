@@ -9,47 +9,48 @@ from typing import Any
 
 import yaml
 
-WRAP_CATEGORIES = (
-    "cache",
-    "coalesce",
-    "memory",
-    "context",
-    "compress",
-    "prompt_cache",
-    "routing",
-    "guardrails",
-    "structured",
-    "eval",
+from openbundle.pipeline.jobs import (
+    ADVISORY_CATEGORIES,
+    HOSTED_JOB_COUNT,
+    LAYER_DEFAULT_TOOL,
+    SELF_HOSTED_JOB_COUNT,
+    WRAP_JOBS,
 )
-ADVISORY_CATEGORIES = ("batch",)
-ALL_PICK_CATEGORIES = WRAP_CATEGORIES + ADVISORY_CATEGORIES
+
+WRAP_CATEGORIES = WRAP_JOBS
+INIT_SKIP_GENERIC = "no compatible tool for this setup"
+
 CATALOG_CATEGORY = {
-    "cache": "caching",
-    "coalesce": "coalesce",
-    "memory": "agent_memory",
-    "context": "context_management",
+    "exact_hash": "caching",
+    "semantic_cache": "caching",
     "compress": "prompt_compression",
-    "prompt_cache": "prompt_caching",
-    "routing": "routing",
-    "guardrails": "guardrails",
+    "history": "prompt_compression",
+    "rag_compress": "prompt_compression",
+    "secrets": "guardrails",
+    "pii": "guardrails",
+    "injection": "guardrails",
+    "nemo_rails": "guardrails",
+    "semantic_router": "routing",
+    "cost_route": "routing",
+    "litellm": "routing",
+    "output_validate": "guardrails",
     "structured": "structured_output",
-    "eval": "evaluation",
+    "eval_promptfoo": "evaluation",
+    "eval_deepeval": "evaluation",
+    "eval_opik": "evaluation",
+    "rag_faithfulness": "evaluation",
+    "obs_langfuse": "observability",
+    "obs_openobserve": "observability",
+    "obs_openmeter": "observability",
+    "obs_agentops": "observability",
+    "obs_agenta": "observability",
+    "lmcache": "caching",
+    "kvcached": "caching",
+    "kvzip": "caching",
+    "deepspec": "speculative_decoding",
+    "memory": "agent_memory",
     "batch": "batch",
 }
-LAYER_DEFAULT_TOOL = {
-    "cache": "sqlite_exact",
-    "coalesce": "singleflight",
-    "memory": "summary",
-    "context": "session_hygiene",
-    "compress": "llmlingua2",
-    "prompt_cache": "prompt_cache",
-    "routing": "prefix_router",
-    "guardrails": "input_guard",
-    "structured": "json_schema",
-    "eval": "sample_eval",
-    "batch": "none",
-}
-INIT_SKIP_GENERIC = "no compatible tool for this setup"
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,9 @@ class Tool:
     credit_line: str = ""
     notes: str = ""
     lane: str = "catalog_only"
+    job: str = ""
+    tier: str = ""
+    role: str = ""
 
     def credited(self) -> str:
         return self.credit_line or self.name
@@ -122,6 +126,9 @@ def load_tools() -> list[Tool]:
                 credit_line=str(raw.get("credit_line") or raw.get("name") or raw["id"]),
                 notes=str(raw.get("notes") or ""),
                 lane=str(raw.get("lane") or "catalog_only"),
+                job=str(raw.get("job") or ""),
+                tier=str(raw.get("tier") or ""),
+                role=str(raw.get("role") or ""),
             )
         )
     return rows
@@ -150,9 +157,29 @@ def lane_counts() -> dict[str, int]:
     return counts
 
 
+def job_headline_counts() -> tuple[int, int, int]:
+    """(hosted primaries, self-hosted primaries, advisory tools). Generated, never hand-typed."""
+    hosted = 0
+    self_hosted = 0
+    advisory = 0
+    for tool in load_tools():
+        if tool.role == "primary" and tool.lane == "wrap" and tool.tier in {"A", "B", "C"}:
+            hosted += 1
+        elif tool.role == "primary" and tool.tier == "self_hosted":
+            self_hosted += 1
+        elif tool.lane == "advisory":
+            advisory += 1
+    if hosted != HOSTED_JOB_COUNT or self_hosted != SELF_HOSTED_JOB_COUNT:
+        # still return actual catalog counts; tests lock equality with HOSTED_JOB_COUNT
+        pass
+    return hosted, self_hosted, advisory
+
+
 def credit_for_layer(layer: str) -> str:
     if layer == "passthrough":
         return "passthrough"
+    if layer == "cache":
+        layer = "exact_hash"
     tool_id = LAYER_DEFAULT_TOOL.get(layer, layer)
     return credit_line(tool_id)
 
@@ -163,7 +190,11 @@ def candidates_for(category: str) -> list[str]:
     if ordered:
         return ordered
     catalog_cat = CATALOG_CATEGORY.get(category, category)
-    return [tool.id for tool in load_tools() if catalog_cat in tool.categories]
+    return [
+        tool.id
+        for tool in load_tools()
+        if tool.job == category or catalog_cat in tool.categories
+    ]
 
 
 def tools_in_category(category: str) -> list[Tool]:
@@ -172,7 +203,8 @@ def tools_in_category(category: str) -> list[Tool]:
     extra = [
         tool
         for tool in load_tools()
-        if CATALOG_CATEGORY.get(category, category) in tool.categories and tool.id not in ids
+        if (tool.job == category or CATALOG_CATEGORY.get(category, category) in tool.categories)
+        and tool.id not in ids
     ]
     return [known[i] for i in ids if i in known] + extra
 
@@ -206,8 +238,12 @@ def incompatibility(
         return "not a live layer"
     if tool.lane == "advisory":
         return "you add this yourself — not on the live path"
+    if tool.role == "alternate":
+        return "same-job fallback — not the first pick"
+    if tool.tier == "self_hosted":
+        return "self-hosted inference only"
     if tool.status != "active":
-        return "not wired in v1"
+        return "not wired"
     if tool.extra:
         if core_only:
             return f"extra {tool.extra} skipped (--core-only)"

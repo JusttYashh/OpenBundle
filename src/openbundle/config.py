@@ -69,6 +69,12 @@ class EvalLayerConfig(BaseModel):
     adapter: str = "sample_eval"
 
 
+class NemoRailsConfig(BaseModel):
+    enabled: bool = False
+    adapter: str = "nemo_guardrails"
+    llm_check: bool = False
+
+
 class CoalesceLayerConfig(BaseModel):
     enabled: bool = False
     adapter: str = "singleflight"
@@ -98,6 +104,7 @@ class LayersConfig(BaseModel):
     guardrails: GuardrailsLayerConfig = Field(default_factory=GuardrailsLayerConfig)
     structured: StructuredLayerConfig = Field(default_factory=StructuredLayerConfig)
     eval: EvalLayerConfig = Field(default_factory=EvalLayerConfig)
+    nemo_rails: NemoRailsConfig = Field(default_factory=NemoRailsConfig)
     coalesce: CoalesceLayerConfig = Field(default_factory=CoalesceLayerConfig)
     prompt_cache: PromptCacheLayerConfig = Field(default_factory=PromptCacheLayerConfig)
     context: ContextLayerConfig = Field(default_factory=ContextLayerConfig)
@@ -139,9 +146,12 @@ class Settings(BaseModel):
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     bundle: BundleConfig = Field(default_factory=BundleConfig)
     layers: LayersConfig = Field(default_factory=LayersConfig)
+    jobs: dict[str, bool] = Field(default_factory=dict)
     passthrough: bool = False
     session_dir: str = ""
     config_path: str = ""
+    with_lynx: bool = False
+    local_obs: bool = False
 
     @property
     def host(self) -> str:

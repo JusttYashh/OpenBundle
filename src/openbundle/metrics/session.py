@@ -33,6 +33,8 @@ class SessionLog:
             "prompt_tokens_after": 0 if response.cache_hit else response.prompt_tokens_after,
             "completion_tokens": 0 if response.cache_hit else response.completion_tokens,
             "memory_extract_tokens": response.memory_extract_tokens,
+            "nemo_rail_tokens": response.nemo_rail_tokens,
+            "fail_open": response.fail_open,
             "latency_ms": round(response.latency_ms, 2),
             "layers": response.layers,
             "provider_error": response.provider_error,

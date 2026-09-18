@@ -1,50 +1,48 @@
-"""Named, credited CLI text. Init stays short; config has specific skip reasons."""
+"""Named, credited CLI text. Init stays short; status is the live number."""
 
 from __future__ import annotations
 
 from openbundle.kb.catalog import (
     ADVISORY_CATEGORIES,
-    ALL_PICK_CATEGORIES,
     INIT_SKIP_GENERIC,
-    WRAP_CATEGORIES,
     credit_line,
     get_tool,
 )
+from openbundle.pipeline.jobs import HOSTED_JOB_IDS, JOB_BY_ID, SELF_HOSTED_JOB_IDS
 from openbundle.kb.select import Selection, explain_category
-
-CATEGORY_LABEL = {
-    "cache": "cache",
-    "coalesce": "coalesce",
-    "compress": "compression",
-    "prompt_cache": "prompt-cache",
-    "routing": "routing",
-    "guardrails": "guardrails",
-    "structured": "structured",
-    "eval": "eval",
-    "memory": "memory",
-    "context": "context",
-    "batch": "batch",
-}
 
 
 def format_init_summary(choice: Selection) -> str:
-    lines = ["OpenBundle initialized. Active tools:"]
-    for category in WRAP_CATEGORIES:
-        label = f"{CATEGORY_LABEL[category]:<12}"
-        tool_id = getattr(choice, category)
-        live = choice.live.get(category, False)
+    lines = ["OpenBundle initialized. Jobs:"]
+    for job_id in HOSTED_JOB_IDS:
+        spec = JOB_BY_ID[job_id]
+        label = f"{spec.label:<22}"
+        tool_id = choice.jobs.get(job_id) or "none"
+        live = choice.live.get(job_id, False)
         if tool_id and tool_id != "none" and live:
             lines.append(f"  ✓ {label} → {credit_line(tool_id)}")
+        elif tool_id and tool_id != "none" and spec.tier == "B":
+            lines.append(f"  … {label} → {credit_line(tool_id)} (warming or extra not installed)")
         elif tool_id and tool_id != "none":
-            lines.append(f"  ○ {label} → {credit_line(tool_id)} (waiting for traffic sample)")
+            lines.append(f"  ○ {label} → {credit_line(tool_id)}")
         else:
             lines.append(f"  ✗ {label} → skipped ({INIT_SKIP_GENERIC})")
+    if choice.local_inference:
+        lines.append("")
+        lines.append("Self-hosted inference detected — not live in this sidecar until constructed:")
+        for job_id in SELF_HOSTED_JOB_IDS:
+            tool_id = choice.jobs.get(job_id) or "none"
+            if tool_id != "none":
+                lines.append(
+                    f"  ○ {JOB_BY_ID[job_id].label:<22} → {credit_line(tool_id)} "
+                    "(engine-side, not verified together)"
+                )
     lines.extend(
         [
             "",
-            "You add this yourself:",
+            "Advisory (never on the live path):",
+            "  memory       → Mem0, Zep, Letta, Cognee, Supermemory, LangMem, MemPalace",
             "  batch        → Anthropic / OpenAI Batch API (~50% off, no streaming)",
-            "                 Use for nightly evals and bulk jobs — never on live chat.",
             "",
             "OpenBundle does not replace these tools — it selects, configures, and",
             "runs them together for you. Full credits: CREDITS.md",
@@ -59,18 +57,18 @@ def format_config_view(
     active: dict[str, str],
     core_only: bool = False,
 ) -> str:
-    wrap_ids = [active[c] for c in WRAP_CATEGORIES if active.get(c) not in (None, "", "none")]
+    wrap_ids = [active[c] for c in HOSTED_JOB_IDS if active.get(c) not in (None, "", "none")]
     blocks: list[str] = ["On the live path:"]
-    for category in WRAP_CATEGORIES:
-        current = active.get(category) or "none"
-        title = CATEGORY_LABEL[category]
+    for job_id in HOSTED_JOB_IDS:
+        current = active.get(job_id) or "none"
+        title = JOB_BY_ID[job_id].label
         if current != "none":
             head = f"{title}: {credit_line(current)}"
         else:
             head = f"{title}: off"
         lines = [head]
         others = wrap_ids if current == "none" else [c for c in wrap_ids if c != current]
-        for tool, why in explain_category(category, extras, chosen=others, core_only=core_only):
+        for tool, why in explain_category(job_id, extras, chosen=others, core_only=core_only):
             if why:
                 lines.append(f"  - {tool.id:<22} {why}")
             elif tool.id == current:
@@ -80,7 +78,7 @@ def format_config_view(
         blocks.append("\n".join(lines))
     blocks.append("You add this yourself:")
     for category in ADVISORY_CATEGORIES:
-        lines = [f"{CATEGORY_LABEL[category]}: off (not on the live path)"]
+        lines = [f"{category}: off (not on the live path)"]
         for tool, why in explain_category(category, extras, core_only=core_only):
             lines.append(f"  - {tool.id:<22} {why or 'you add this yourself — not on the live path'}")
         blocks.append("\n".join(lines))
@@ -89,26 +87,26 @@ def format_config_view(
 
 def apply_bundle_to_doc(doc: dict, category: str, tool_id: str) -> None:
     bundle = doc.setdefault("bundle", {})
+    jobs = doc.setdefault("jobs", {})
     layers = doc.setdefault("layers", {})
-    if category == "batch":
-        bundle["batch"] = "none"
-        layers.setdefault("batch", {})["enabled"] = False
+    if category in ADVISORY_CATEGORIES:
+        bundle[category] = "none"
+        jobs[category] = False
         return
     bundle[category] = tool_id
-    layer = layers.setdefault(category, {})
-    layer["enabled"] = tool_id != "none"
+    jobs[category] = tool_id != "none"
     if category == "compress":
+        layer = layers.setdefault("compress", {})
+        layer["enabled"] = tool_id != "none"
         layer["adapter"] = "llmlingua2" if tool_id == "llmlingua2" else tool_id
-    elif category == "memory":
-        layer["adapter"] = "mem0" if tool_id == "mem0" else "summary"
-    elif tool_id != "none":
-        layer["adapter"] = tool_id
+    if category == "exact_hash":
+        layers.setdefault("cache", {})["enabled"] = tool_id != "none"
 
 
 def active_from_doc(doc: dict) -> dict[str, str]:
     bundle = doc.get("bundle") or {}
     out = {}
-    for key in ALL_PICK_CATEGORIES:
+    for key in list(HOSTED_JOB_IDS) + list(ADVISORY_CATEGORIES) + list(SELF_HOSTED_JOB_IDS):
         out[key] = str(bundle.get(key) or "none")
     return out
 

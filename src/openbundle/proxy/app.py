@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from openbundle.config import Settings, load_settings, overlay_enabled
 from openbundle.metrics.samples import record_sample
 from openbundle.metrics.session import SessionLog
+from openbundle.pipeline.jobs import HOSTED_JOB_IDS, SELF_HOSTED_JOB_IDS
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest, InternalResponse
 from openbundle.proxy.anthropic_api import parse_anthropic
@@ -28,23 +29,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/health")
     async def health() -> dict:
         on = overlay_enabled(settings)
-        layers = settings.layers
+        pipeline: Pipeline = app.state.pipeline
+        infos = pipeline.registry.info_snapshot()
+        stages = {}
+        for job_id in HOSTED_JOB_IDS + SELF_HOSTED_JOB_IDS:
+            info = infos.get(job_id)
+            state = info.state if info else "off"
+            live = bool(on and pipeline.registry.is_constructed_live(job_id))
+            if on and state == "live" and not live:
+                state = "off"
+            stages[job_id] = {"live": live, "state": state if on else "off"}
+        degraded = [job_id for job_id, err in pipeline.registry.degraded_jobs()] if on else []
+        warming = pipeline.registry.warming_jobs() if on else []
         return {
             "status": "ok",
             "listen": settings.listen,
             "overlay": "on" if on else "off",
-            "cache": bool(on and layers.cache.enabled),
-            "coalesce": bool(on and layers.coalesce.enabled),
-            "memory": bool(on and layers.memory.enabled),
-            "context": bool(on and layers.context.enabled),
-            "compress": bool(on and layers.compress.enabled),
-            "prompt_cache": bool(on and layers.prompt_cache.enabled),
-            "routing": bool(on and layers.routing.enabled),
-            "guardrails": bool(on and layers.guardrails.enabled),
-            "structured": bool(on and layers.structured.enabled),
-            "eval": bool(on and layers.eval.enabled),
+            "stages": stages,
+            "warming": warming,
+            "degraded": degraded,
+            "fail_open_count": pipeline.registry.fail_open_count,
+            "nemo_rail_tokens": pipeline.registry.nemo_rail_tokens,
+            "cache": bool(on and stages.get("exact_hash", {}).get("live")),
+            "memory": False,
             "batch": False,
             "batch_lane": "advisory",
+            "lynx": bool(on and pipeline.registry.lynx_constructed()),
+            "local_obs": pipeline.registry.local_obs,
         }
 
     @app.post("/v1/chat/completions")
@@ -101,9 +112,9 @@ async def _handle_stream(
     pipeline: Pipeline, session: SessionLog, parsed: InternalRequest
 ) -> Response:
     started = time.perf_counter()
-    working, before, hit = pipeline.prepare(parsed)
+    working, before, hit, stages = pipeline.prepare(parsed)
     if hit is not None:
-        final = pipeline.finalize(parsed, working, before, hit, started)
+        final = pipeline.finalize(parsed, working, before, hit, started, stages)
         session.record(final)
 
         async def replay() -> AsyncIterator[bytes]:
@@ -125,12 +136,12 @@ async def _handle_stream(
             model=parsed.model,
             protocol=parsed.protocol,
         )
-        session.record(pipeline.finalize(parsed, working, before, result, started))
+        session.record(pipeline.finalize(parsed, working, before, result, started, stages))
         return _error_response(result)
 
     kind, payload = first
     if kind == "done":
-        result = pipeline.finalize(parsed, working, before, payload, started)
+        result = pipeline.finalize(parsed, working, before, payload, started, stages)
         session.record(result)
         if result.events and result.status_code < 400:
             async def replay_err() -> AsyncIterator[bytes]:
@@ -171,7 +182,7 @@ async def _handle_stream(
             if cancelled:
                 result.client_cancelled = True
                 result.ok = False
-            session.record(pipeline.finalize(parsed, working, before, result, started))
+            session.record(pipeline.finalize(parsed, working, before, result, started, stages))
 
     extra = _cache_header(False)
     return StreamingResponse(rest(), media_type="text/event-stream", headers=extra)

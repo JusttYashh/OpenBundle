@@ -1,34 +1,55 @@
 # Compatibility rules. Pipeline order is fixed; do not ask an LLM to reorder.
 order:
-  - cache
-  - memory
+  - exact_hash
+  - semantic_cache
   - compress
+  - history
+  - rag_compress
+  - secrets
+  - pii
+  - injection
+  - nemo_rails
+  - semantic_router
+  - cost_route
+  - litellm
   - provider
+  - output_validate
+  - structured
+  - eval_promptfoo
+  - eval_deepeval
+  - eval_opik
+  - rag_faithfulness
+  - obs
 
 rules:
   - id: cache-on-original
     text: Cache keys use original messages, never the compressed form.
   - id: exact-hash-default
-    text: Default cache is exact-hash only. Semantic similarity requires layers.cache.semantic true.
+    text: Default cache is exact-hash only. Semantic cache is a later stage and does not run on an exact hit.
   - id: cache-stream-shape
     text: Cache-hit responses must match the client stream mode (SSE vs JSON).
-  - id: memory-before-compress
-    text: Memory runs before prompt compression. Do not run two memory tools.
   - id: never-compress-protected
     text: Never compress tool schemas, cache_control / Anthropic prompt-cache prefixes, or document blocks.
-  - id: extract-from-original
-    text: Memory extraction uses the original conversation and is rate-limited.
-  - id: one-per-category
-    text: Each category has at most one active adapter.
+  - id: one-per-job
+    text: Each job has at most one active adapter. Alternates are same-job fallback only.
   - id: fail-open
-    text: Layers fail-open on timeout, import, or error.
+    text: Scanners fail-open on timeout, import, or error, then show DEGRADED until the next success.
   - id: provider-errors-passthrough
-    text: Provider HTTP and mid-stream errors pass through unchanged. Failed turns are not cached and do not extract.
+    text: Provider HTTP and mid-stream errors pass through unchanged. Failed turns are not cached.
+  - id: memory-advisory
+    text: Memory tools are advisory. They never run in Pipeline.prepare.
+  - id: kv-combo-unverified
+    text: LMCache, kvcached, and KVzip are not verified to work together.
+  - id: embeddings-unverified
+    text: GPTCache and Semantic Router do not share an embedding download unless a joint load test exists.
+  - id: nemo-not-free
+    text: NeMo rails reuse the user's provider and add tokens plus latency when they fire.
+  - id: lynx-not-default
+    text: Lynx-8B is not live by default. Hosted-API users get the RAG faithfulness heuristic.
 
 conflicts:
   - [mem0, supermemory]
   - [mem0, letta]
-  - [llmlingua2, selective_context]
 
 skip_compression_on:
   - tools

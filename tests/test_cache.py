@@ -59,14 +59,18 @@ def test_semantic_off_by_default(bundle_client):
 
 
 def test_semantic_opt_in(bundle_client):
-    cache = bundle_client.app_obj.state.pipeline.cache  # type: ignore[attr-defined]
-    cache.semantic = True
-    cache.store.semantic = True
-    cache.store.threshold = 0.5
-    bundle_client.post(
-        "/v1/chat/completions",
-        json={"model": "gpt-4.1", "messages": [{"role": "user", "content": "the sky is blue today"}]},
-    )
+    from openbundle.adapters.named import SemanticCacheStage
+    from openbundle.pipeline.jobs import LIVE
+    from openbundle.pipeline.types import InternalResponse
+    from openbundle.proxy.stream import synthesize_events
+
+    def lookup(request):
+        hit = InternalResponse(ok=True, body={"choices": [{"message": {"content": "semantic"}}]})
+        hit.events = synthesize_events(hit)
+        return hit
+
+    stage = SemanticCacheStage(lookup=lookup)
+    bundle_client.app_obj.state.pipeline.registry.publish("semantic_cache", stage, LIVE)
     similar = bundle_client.post(
         "/v1/chat/completions",
         json={"model": "gpt-4.1", "messages": [{"role": "user", "content": "the sky is blue tonight"}]},

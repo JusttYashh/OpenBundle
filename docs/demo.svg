@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="2222" viewBox="0 0 920 2222" role="img" aria-label="openbundle init, a request, then status">
+<rect width="100%" height="100%" rx="8" fill="#0d1117"/>
+<text font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" xml:space="preserve">
+<tspan x="16" y="28" fill="#7ee787">$ openbundle init --no-banner</tspan>
+<tspan x="16" y="43" fill="#e6edf3">OpenBundle initialized. Jobs:</tspan>
+<tspan x="16" y="58" fill="#e6edf3">  ✓ exact-hash cache       → OpenBundle exact-hash cache (first-party, MIT)</tspan>
+<tspan x="16" y="73" fill="#d2a8ff">  … semantic cache         → GPTCache (github.com/zilliztech/GPTCache, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="88" fill="#d2a8ff">  … compress               → LLMLingua-2 (github.com/microsoft/LLMLingua, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="103" fill="#d2a8ff">  … history prune          → Selective Context (github.com/liyucheng09/Selective_Context, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="118" fill="#d2a8ff">  … RAG compress           → RECOMP (github.com/stanford-futuredata/RECOMP, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="133" fill="#e6edf3">  ✓ secrets scan           → LLM Guard (github.com/protectai/llm-guard, MIT)</tspan>
+<tspan x="16" y="148" fill="#d2a8ff">  … PII scan               → Microsoft Presidio (github.com/microsoft/presidio, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="163" fill="#e6edf3">  ✓ injection scan         → Rebuff (github.com/protectai/rebuff, Apache-2.0)</tspan>
+<tspan x="16" y="178" fill="#e6edf3">  ✓ NeMo rails             → NeMo Guardrails (github.com/NVIDIA/NeMo-Guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="193" fill="#d2a8ff">  … semantic router        → Semantic Router (github.com/aurelio-labs/semantic-router, MIT) (warming or extra not installed)</tspan>
+<tspan x="16" y="208" fill="#e6edf3">  ✓ cost router            → RouteLLM (github.com/lm-sys/RouteLLM, MIT)</tspan>
+<tspan x="16" y="223" fill="#e6edf3">  ✓ LiteLLM dispatch       → LiteLLM (github.com/BerriAI/litellm, MIT)</tspan>
+<tspan x="16" y="238" fill="#e6edf3">  ✓ output validate        → Guardrails AI (github.com/guardrails-ai/guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="253" fill="#e6edf3">  ✓ structured output      → Instructor (github.com/instructor-ai/instructor, MIT)</tspan>
+<tspan x="16" y="268" fill="#e6edf3">  ✓ promptfoo              → promptfoo (github.com/promptfoo/promptfoo, MIT)</tspan>
+<tspan x="16" y="283" fill="#e6edf3">  ✓ DeepEval               → DeepEval (github.com/confident-ai/deepeval, Apache-2.0)</tspan>
+<tspan x="16" y="298" fill="#e6edf3">  ✓ Opik                   → Opik (github.com/comet-ml/opik, Apache-2.0)</tspan>
+<tspan x="16" y="313" fill="#e6edf3">  ✓ RAG faithfulness       → OpenBundle RAG faithfulness heuristic (Lynx-8B stand-in, MIT)</tspan>
+<tspan x="16" y="328" fill="#e6edf3">  ✓ Langfuse               → Langfuse (github.com/langfuse/langfuse, MIT)</tspan>
+<tspan x="16" y="343" fill="#e6edf3">  ✓ OpenObserve            → OpenObserve (github.com/openobserve/openobserve, Apache-2.0)</tspan>
+<tspan x="16" y="358" fill="#e6edf3">  ✓ OpenMeter              → OpenMeter (github.com/openmeterio/openmeter, Apache-2.0)</tspan>
+<tspan x="16" y="373" fill="#e6edf3">  ✓ AgentOps               → AgentOps (github.com/AgentOps-AI/agentops, MIT)</tspan>
+<tspan x="16" y="388" fill="#e6edf3">  ✓ Agenta                 → Agenta (github.com/Agenta-AI/agenta, MIT)</tspan>
+<tspan x="16" y="403" fill="#e6edf3"></tspan>
+<tspan x="16" y="418" fill="#e6edf3">Advisory (never on the live path):</tspan>
+<tspan x="16" y="433" fill="#e6edf3">  memory       → Mem0, Zep, Letta, Cognee, Supermemory, LangMem, MemPalace</tspan>
+<tspan x="16" y="448" fill="#e6edf3">  batch        → Anthropic / OpenAI Batch API (~50% off, no streaming)</tspan>
+<tspan x="16" y="463" fill="#e6edf3"></tspan>
+<tspan x="16" y="478" fill="#e6edf3">OpenBundle does not replace these tools — it selects, configures, and</tspan>
+<tspan x="16" y="493" fill="#e6edf3">runs them together for you. Full credits: CREDITS.md</tspan>
+<tspan x="16" y="508" fill="#e6edf3"></tspan>
+<tspan x="16" y="523" fill="#e6edf3">Observability SDKs default to vendor hosted free tiers. Traces leave this machine. Pass --local-obs to keep them here.</tspan>
+<tspan x="16" y="538" fill="#e6edf3"></tspan>
+<tspan x="16" y="553" fill="#e6edf3">Input scanners fail-open so a broken extra never blocks you. If one errors, `openbundle status` prints a DEGRADED banner, not a quiet live.</tspan>
+<tspan x="16" y="568" fill="#e6edf3">NeMo rails reuse your provider: extra tokens and latency when they fire (nemo_rail_tokens on status). GPTCache and Semantic Router do not share an embedding download unless a joint load test exists.</tspan>
+<tspan x="16" y="583" fill="#e6edf3"></tspan>
+<tspan x="16" y="598" fill="#e6edf3">No ANTHROPIC_API_KEY or OPENAI_API_KEY in the environment.</tspan>
+<tspan x="16" y="613" fill="#e6edf3">Attach your client:</tspan>
+<tspan x="16" y="628" fill="#e6edf3">  export ANTHROPIC_BASE_URL=http://127.0.0.1:4180</tspan>
+<tspan x="16" y="643" fill="#e6edf3">  # or OpenAI: base_url=http://127.0.0.1:4180/v1</tspan>
+<tspan x="16" y="658" fill="#e6edf3"></tspan>
+<tspan x="16" y="673" fill="#e6edf3">Then:  openbundle serve</tspan>
+<tspan x="16" y="688" fill="#e6edf3">Live number: openbundle status</tspan>
+<tspan x="16" y="703" fill="#e6edf3">Toggle: openbundle on | openbundle off</tspan>
+<tspan x="16" y="718" fill="#e6edf3"></tspan>
+<tspan x="16" y="733" fill="#7ee787">$ openbundle serve --no-banner</tspan>
+<tspan x="16" y="748" fill="#e6edf3">OpenBundle v0.1.0 listening on http://127.0.0.1:4180</tspan>
+<tspan x="16" y="763" fill="#e6edf3">overlay: on</tspan>
+<tspan x="16" y="778" fill="#e6edf3"></tspan>
+<tspan x="16" y="793" fill="#7ee787">$ openbundle status --no-banner   # while Tier B is warming</tspan>
+<tspan x="16" y="808" fill="#e6edf3">OpenBundle status</tspan>
+<tspan x="16" y="823" fill="#e6edf3">job                    state      tool</tspan>
+<tspan x="16" y="838" fill="#e6edf3">exact-hash cache       live       OpenBundle exact-hash cache (first-party, MIT)</tspan>
+<tspan x="16" y="853" fill="#d2a8ff">semantic cache         warming    GPTCache (github.com/zilliztech/GPTCache, MIT)  (quiet)</tspan>
+<tspan x="16" y="868" fill="#d2a8ff">compress               warming    LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)  (quiet)</tspan>
+<tspan x="16" y="883" fill="#d2a8ff">history prune          warming    Selective Context (github.com/liyucheng09/Selective_Context, MIT)  (quiet)</tspan>
+<tspan x="16" y="898" fill="#d2a8ff">RAG compress           warming    RECOMP (github.com/stanford-futuredata/RECOMP, MIT)  (quiet)</tspan>
+<tspan x="16" y="913" fill="#e6edf3">secrets scan           live       LLM Guard (github.com/protectai/llm-guard, MIT)</tspan>
+<tspan x="16" y="928" fill="#d2a8ff">PII scan               warming    Microsoft Presidio (github.com/microsoft/presidio, MIT)  (quiet)</tspan>
+<tspan x="16" y="943" fill="#e6edf3">injection scan         live       Rebuff (github.com/protectai/rebuff, Apache-2.0)</tspan>
+<tspan x="16" y="958" fill="#e6edf3">NeMo rails             live       NeMo Guardrails (github.com/NVIDIA/NeMo-Guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="973" fill="#d2a8ff">semantic router        warming    Semantic Router (github.com/aurelio-labs/semantic-router, MIT)  (quiet)</tspan>
+<tspan x="16" y="988" fill="#e6edf3">cost router            live       RouteLLM (github.com/lm-sys/RouteLLM, MIT)</tspan>
+<tspan x="16" y="1003" fill="#e6edf3">LiteLLM dispatch       live       LiteLLM (github.com/BerriAI/litellm, MIT)</tspan>
+<tspan x="16" y="1018" fill="#e6edf3">output validate        live       Guardrails AI (github.com/guardrails-ai/guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="1033" fill="#e6edf3">structured output      live       Instructor (github.com/instructor-ai/instructor, MIT)</tspan>
+<tspan x="16" y="1048" fill="#e6edf3">promptfoo              live       promptfoo (github.com/promptfoo/promptfoo, MIT)</tspan>
+<tspan x="16" y="1063" fill="#e6edf3">DeepEval               live       DeepEval (github.com/confident-ai/deepeval, Apache-2.0)</tspan>
+<tspan x="16" y="1078" fill="#e6edf3">Opik                   live       Opik (github.com/comet-ml/opik, Apache-2.0)</tspan>
+<tspan x="16" y="1093" fill="#e6edf3">RAG faithfulness       live       OpenBundle RAG faithfulness heuristic (Lynx-8B stand-in, MIT)</tspan>
+<tspan x="16" y="1108" fill="#e6edf3">Langfuse               live       Langfuse (github.com/langfuse/langfuse, MIT)</tspan>
+<tspan x="16" y="1123" fill="#e6edf3">OpenObserve            live       OpenObserve (github.com/openobserve/openobserve, Apache-2.0)</tspan>
+<tspan x="16" y="1138" fill="#e6edf3">OpenMeter              live       OpenMeter (github.com/openmeterio/openmeter, Apache-2.0)</tspan>
+<tspan x="16" y="1153" fill="#e6edf3">AgentOps               live       AgentOps (github.com/AgentOps-AI/agentops, MIT)</tspan>
+<tspan x="16" y="1168" fill="#e6edf3">Agenta                 live       Agenta (github.com/Agenta-AI/agenta, MIT)</tspan>
+<tspan x="16" y="1183" fill="#e6edf3">LMCache                off        LMCache (github.com/LMCache/LMCache, Apache-2.0)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="1198" fill="#e6edf3">kvcached               off        kvcached (github.com/ovg-project/kvcached, Apache-2.0)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="1213" fill="#e6edf3">KVzip                  off        KVzip (github.com/snu-mllab/KVzip, MIT)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="1228" fill="#e6edf3">DeepSpec               off        DeepSpec (github.com/deepseek-ai/DeepSpec, MIT)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="1243" fill="#e6edf3"></tspan>
+<tspan x="16" y="1258" fill="#e6edf3">fail_open_count: 0</tspan>
+<tspan x="16" y="1273" fill="#e6edf3">nemo_rail_tokens: 0</tspan>
+<tspan x="16" y="1288" fill="#e6edf3">rag_faithfulness: heuristic (not Lynx)</tspan>
+<tspan x="16" y="1303" fill="#e6edf3">obs: vendor hosted free tier</tspan>
+<tspan x="16" y="1318" fill="#e6edf3"></tspan>
+<tspan x="16" y="1333" fill="#7ee787">$ curl -s http://127.0.0.1:4180/v1/chat/completions \</tspan>
+<tspan x="16" y="1348" fill="#e6edf3">    -H &#x27;content-type: application/json&#x27; \</tspan>
+<tspan x="16" y="1363" fill="#e6edf3">    -d &#x27;{&quot;model&quot;:&quot;gpt-4.1&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;hello&quot;}]}&#x27;</tspan>
+<tspan x="16" y="1378" fill="#e6edf3">{</tspan>
+<tspan x="16" y="1393" fill="#e6edf3">  &quot;id&quot;: &quot;chatcmpl-mock&quot;,</tspan>
+<tspan x="16" y="1408" fill="#e6edf3">  &quot;object&quot;: &quot;chat.completion&quot;,</tspan>
+<tspan x="16" y="1423" fill="#e6edf3">  &quot;model&quot;: &quot;gpt-4.1&quot;,</tspan>
+<tspan x="16" y="1438" fill="#e6edf3">  &quot;choices&quot;: [</tspan>
+<tspan x="16" y="1453" fill="#e6edf3">    {</tspan>
+<tspan x="16" y="1468" fill="#e6edf3">      &quot;index&quot;: 0,</tspan>
+<tspan x="16" y="1483" fill="#e6edf3">      &quot;message&quot;: {</tspan>
+<tspan x="16" y="1498" fill="#e6edf3">        &quot;role&quot;: &quot;assistant&quot;,</tspan>
+<tspan x="16" y="1513" fill="#e6edf3">        &quot;content&quot;: &quot;hello from mock&quot;</tspan>
+<tspan x="16" y="1528" fill="#e6edf3">      },</tspan>
+<tspan x="16" y="1543" fill="#e6edf3">      &quot;finish_reason&quot;: &quot;stop&quot;</tspan>
+<tspan x="16" y="1558" fill="#e6edf3">    }</tspan>
+<tspan x="16" y="1573" fill="#e6edf3">  ],</tspan>
+<tspan x="16" y="1588" fill="#e6edf3">  &quot;usage&quot;: {</tspan>
+<tspan x="16" y="1603" fill="#e6edf3">    &quot;prompt_tokens&quot;: 12,</tspan>
+<tspan x="16" y="1618" fill="#e6edf3">    &quot;completion_tokens&quot;: 8,</tspan>
+<tspan x="16" y="1633" fill="#e6edf3">    &quot;total_tokens&quot;: 20</tspan>
+<tspan x="16" y="1648" fill="#e6edf3">  }</tspan>
+<tspan x="16" y="1663" fill="#e6edf3">}</tspan>
+<tspan x="16" y="1678" fill="#e6edf3"></tspan>
+<tspan x="16" y="1693" fill="#7ee787">$ openbundle status --no-banner</tspan>
+<tspan x="16" y="1708" fill="#e6edf3">OpenBundle status</tspan>
+<tspan x="16" y="1723" fill="#e6edf3">job                    state      tool</tspan>
+<tspan x="16" y="1738" fill="#e6edf3">exact-hash cache       live       OpenBundle exact-hash cache (first-party, MIT)</tspan>
+<tspan x="16" y="1753" fill="#e6edf3">semantic cache         off        GPTCache (github.com/zilliztech/GPTCache, MIT)  (extra gptcache not installed)</tspan>
+<tspan x="16" y="1768" fill="#d2a8ff">compress               warming    LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)  (quiet)</tspan>
+<tspan x="16" y="1783" fill="#e6edf3">history prune          off        Selective Context (github.com/liyucheng09/Selective_Context, MIT)  (extra selective_context not installed)</tspan>
+<tspan x="16" y="1798" fill="#e6edf3">RAG compress           off        RECOMP (github.com/stanford-futuredata/RECOMP, MIT)  (extra recomp not installed)</tspan>
+<tspan x="16" y="1813" fill="#e6edf3">secrets scan           live       LLM Guard (github.com/protectai/llm-guard, MIT)</tspan>
+<tspan x="16" y="1828" fill="#e6edf3">PII scan               off        Microsoft Presidio (github.com/microsoft/presidio, MIT)  (extra presidio not installed)</tspan>
+<tspan x="16" y="1843" fill="#e6edf3">injection scan         live       Rebuff (github.com/protectai/rebuff, Apache-2.0)</tspan>
+<tspan x="16" y="1858" fill="#e6edf3">NeMo rails             live       NeMo Guardrails (github.com/NVIDIA/NeMo-Guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="1873" fill="#e6edf3">semantic router        off        Semantic Router (github.com/aurelio-labs/semantic-router, MIT)  (extra semantic_router not installed)</tspan>
+<tspan x="16" y="1888" fill="#e6edf3">cost router            live       RouteLLM (github.com/lm-sys/RouteLLM, MIT)</tspan>
+<tspan x="16" y="1903" fill="#e6edf3">LiteLLM dispatch       live       LiteLLM (github.com/BerriAI/litellm, MIT)</tspan>
+<tspan x="16" y="1918" fill="#e6edf3">output validate        live       Guardrails AI (github.com/guardrails-ai/guardrails, Apache-2.0)</tspan>
+<tspan x="16" y="1933" fill="#e6edf3">structured output      live       Instructor (github.com/instructor-ai/instructor, MIT)</tspan>
+<tspan x="16" y="1948" fill="#e6edf3">promptfoo              live       promptfoo (github.com/promptfoo/promptfoo, MIT)</tspan>
+<tspan x="16" y="1963" fill="#e6edf3">DeepEval               live       DeepEval (github.com/confident-ai/deepeval, Apache-2.0)</tspan>
+<tspan x="16" y="1978" fill="#e6edf3">Opik                   live       Opik (github.com/comet-ml/opik, Apache-2.0)</tspan>
+<tspan x="16" y="1993" fill="#e6edf3">RAG faithfulness       live       OpenBundle RAG faithfulness heuristic (Lynx-8B stand-in, MIT)</tspan>
+<tspan x="16" y="2008" fill="#e6edf3">Langfuse               live       Langfuse (github.com/langfuse/langfuse, MIT)</tspan>
+<tspan x="16" y="2023" fill="#e6edf3">OpenObserve            live       OpenObserve (github.com/openobserve/openobserve, Apache-2.0)</tspan>
+<tspan x="16" y="2038" fill="#e6edf3">OpenMeter              live       OpenMeter (github.com/openmeterio/openmeter, Apache-2.0)</tspan>
+<tspan x="16" y="2053" fill="#e6edf3">AgentOps               live       AgentOps (github.com/AgentOps-AI/agentops, MIT)</tspan>
+<tspan x="16" y="2068" fill="#e6edf3">Agenta                 live       Agenta (github.com/Agenta-AI/agenta, MIT)</tspan>
+<tspan x="16" y="2083" fill="#e6edf3">LMCache                off        LMCache (github.com/LMCache/LMCache, Apache-2.0)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="2098" fill="#e6edf3">kvcached               off        kvcached (github.com/ovg-project/kvcached, Apache-2.0)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="2113" fill="#e6edf3">KVzip                  off        KVzip (github.com/snu-mllab/KVzip, MIT)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="2128" fill="#e6edf3">DeepSpec               off        DeepSpec (github.com/deepseek-ai/DeepSpec, MIT)  (no local vLLM/SGLang/Ollama detected)</tspan>
+<tspan x="16" y="2143" fill="#e6edf3"></tspan>
+<tspan x="16" y="2158" fill="#e6edf3">fail_open_count: 0</tspan>
+<tspan x="16" y="2173" fill="#e6edf3">nemo_rail_tokens: 0</tspan>
+<tspan x="16" y="2188" fill="#e6edf3">rag_faithfulness: heuristic (not Lynx)</tspan>
+<tspan x="16" y="2203" fill="#e6edf3">obs: vendor hosted free tier</tspan>
+</text></svg>

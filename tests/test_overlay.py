@@ -25,6 +25,6 @@ def test_overlay_enabled_env(tmp_settings: Settings, monkeypatch):
 def test_prepare_passthrough_when_overlay_off(tmp_settings: Settings):
     write_overlay_enabled(False)
     pipeline = Pipeline(tmp_settings)
-    working, _before, hit = pipeline.prepare(_req())
+    working, _before, hit, _stages = pipeline.prepare(_req())
     assert working.passthrough is True
     assert hit is None

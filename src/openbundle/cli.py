@@ -43,8 +43,9 @@ from openbundle.kb.display import (
 )
 from openbundle.kb.catalog import WRAP_CATEGORIES, credit_line, get_tool, incompatibility
 from openbundle.kb.select import select
-from openbundle.metrics.samples import has_samples
-from openbundle.metrics.smoke import allow_lossy_layers, smoke_check_compress, smoke_check_memory
+from openbundle.kb.status import format_status
+from openbundle.metrics.smoke import smoke_check_compress
+from openbundle.pipeline.jobs import HOSTED_JOB_IDS
 from openbundle.metrics.cost import lookup_model, stale_rows
 from openbundle.metrics.report import print_report
 from openbundle.metrics.session import SessionLog
@@ -66,8 +67,19 @@ def _banner(no_banner: bool, compact: bool = False) -> None:
 
 def _write_config(output: Path, choice) -> None:
     live = choice.live
+    jobs = {job_id: bool(choice.jobs.get(job_id) not in (None, "", "none")) for job_id in HOSTED_JOB_IDS}
+    if choice.local_inference:
+        from openbundle.pipeline.jobs import SELF_HOSTED_JOB_IDS
+
+        for job_id in SELF_HOSTED_JOB_IDS:
+            jobs[job_id] = True
+    bundle = {job_id: choice.jobs.get(job_id, "none") for job_id in HOSTED_JOB_IDS}
+    bundle["memory"] = "none"
+    bundle["batch"] = "none"
     doc = {
         "listen": f"{DEFAULT_HOST}:{DEFAULT_PORT}",
+        "with_lynx": bool(choice.with_lynx),
+        "local_obs": bool(choice.local_obs),
         "providers": {
             "anthropic": {
                 "api_key": "env:ANTHROPIC_API_KEY",
@@ -78,57 +90,23 @@ def _write_config(output: Path, choice) -> None:
                 "base_url": "https://api.openai.com/v1",
             },
         },
-        "bundle": {
-            "cache": choice.cache,
-            "coalesce": choice.coalesce,
-            "memory": choice.memory,
-            "context": choice.context,
-            "compress": choice.compress,
-            "prompt_cache": choice.prompt_cache,
-            "routing": choice.routing,
-            "guardrails": choice.guardrails,
-            "structured": choice.structured,
-            "eval": choice.eval,
-            "batch": "none",
-        },
+        "bundle": bundle,
+        "jobs": jobs,
         "layers": {
-            "cache": {"enabled": live.get("cache", False), "semantic": False},
-            "coalesce": {"enabled": live.get("coalesce", False), "adapter": choice.coalesce},
-            "memory": {
-                "enabled": live.get("memory", False),
-                "user_id": "local",
-                "adapter": "mem0" if choice.memory == "mem0" else "summary",
-                "extract": {
-                    "every_n_turns": 3,
-                    "min_interval_seconds": 15,
-                    "max_per_minute": 4,
-                    "skip_if_user_tokens_below": 50,
-                },
-            },
-            "context": {"enabled": live.get("context", False), "adapter": choice.context, "window": 40},
+            "cache": {"enabled": jobs.get("exact_hash", True), "semantic": False},
             "compress": {
-                "enabled": live.get("compress", False),
+                "enabled": jobs.get("compress", False),
                 "rate": 0.5,
                 "skip_cache_control": True,
-                "adapter": "llmlingua2" if choice.compress == "llmlingua2" else choice.compress,
+                "adapter": "llmlingua2",
             },
-            "prompt_cache": {"enabled": live.get("prompt_cache", False), "adapter": choice.prompt_cache},
-            "routing": {
-                "enabled": live.get("routing", False),
-                "adapter": choice.routing,
+            "structured": {"enabled": jobs.get("structured", False), "adapter": "instructor"},
+            "nemo_rails": {
+                "enabled": jobs.get("nemo_rails", False),
+                "adapter": "nemo_guardrails",
+                "llm_check": bool(jobs.get("nemo_rails", False)),
             },
-            "guardrails": {
-                "enabled": live.get("guardrails", False),
-                "adapter": choice.guardrails,
-            },
-            "structured": {
-                "enabled": live.get("structured", False),
-                "adapter": choice.structured,
-            },
-            "eval": {
-                "enabled": live.get("eval", False),
-                "adapter": choice.eval,
-            },
+            "memory": {"enabled": False, "adapter": "none"},
             "batch": {"enabled": False, "adapter": "none"},
         },
     }
@@ -177,76 +155,69 @@ def check(
     config: Optional[Path] = typer.Option(None, "--config", "-c"),
     no_banner: bool = typer.Option(False, "--no-banner"),
 ) -> None:
-    """Smoke-check wrap extras against logged samples and enable layers that pass."""
+    """Re-select jobs from the current environment and rewrite the overlay."""
     _banner(no_banner)
     path = config or find_config_file()
     if path is None:
         typer.echo("No openbundle.yaml found. Run `openbundle init` first.", err=True)
         raise typer.Exit(code=2)
-    if not has_samples():
-        typer.echo(
-            "No local samples yet. Only lossless cache is live until traffic is logged."
-        )
-        typer.echo("Point a client at http://127.0.0.1:4180, send a few requests, then re-run.")
-        raise typer.Exit(code=1)
     extras = installed_extras()
     scan = scan_env()
     choice = select(scan, extras, allow_lossy=True)
-    if choice.compress == "llmlingua2" and not smoke_check_compress():
-        choice.compress = "none"
+    if choice.jobs.get("compress") == "llmlingua2" and not smoke_check_compress():
+        choice.jobs["compress"] = "none"
         choice.live["compress"] = False
         typer.echo("compress skipped: smoke-check failed on local samples.")
-    if choice.memory == "mem0" and not smoke_check_memory(adapter="mem0"):
-        choice.memory = "summary"
-        choice.live["memory"] = True
-        typer.echo("memory: Mem0 smoke-check failed; first-party summary stays on.")
     _write_config(path, choice)
     write_credits(Path.cwd() / "CREDITS.md")
     typer.echo(format_init_summary(choice))
-    typer.echo("Smoke-check applied. Repo and source were not touched.")
+    typer.echo("Selection applied. Repo and source were not touched.")
 
 
 @app.command()
 def init(
     output: Path = typer.Option(Path("openbundle.yaml"), "--output", "-o"),
-    core_only: bool = typer.Option(False, "--core-only", help="Cache only; skip extras even if installed."),
+    core_only: bool = typer.Option(False, "--core-only", help="Exact-hash only."),
+    with_lynx: bool = typer.Option(False, "--with-lynx", help="Enable Lynx-8B faithfulness if local inference exists."),
+    local_obs: bool = typer.Option(False, "--local-obs", help="Point obs SDKs at localhost instead of vendor hosted tiers."),
     no_banner: bool = typer.Option(False, "--no-banner"),
 ) -> None:
-    """Resolve compatible tools, write the overlay, regenerate CREDITS.md."""
+    """Resolve 23 jobs, write the overlay, start Tier B warming, regenerate CREDITS.md."""
     _banner(no_banner)
     with Pulse("Checking compatibility", show_logo=not no_banner):
         scan = scan_env()
         extras = [] if core_only else installed_extras()
     with Pulse("Selecting tools", show_logo=False):
-        choice = select(scan, extras, core_only=core_only, allow_lossy=allow_lossy_layers())
-        if (
-            choice.live.get("compress")
-            and choice.compress == "llmlingua2"
-            and not smoke_check_compress()
-        ):
-            choice.compress = "none"
-            choice.live["compress"] = False
-            if "compress" in choice.details:
-                choice.details["compress"].tool_id = "none"
-                choice.details["compress"].live = False
-        if choice.live.get("memory") and choice.memory == "mem0" and not smoke_check_memory(adapter="mem0"):
-            choice.memory = "summary"
-            if "memory" in choice.details:
-                choice.details["memory"].tool_id = "summary"
-                choice.details["memory"].live = True
+        choice = select(
+            scan,
+            extras,
+            core_only=core_only,
+            allow_lossy=True,
+            with_lynx=with_lynx,
+            local_obs=local_obs,
+        )
     with Pulse("Writing config", show_logo=False):
         _write_config(output, choice)
         write_credits(Path.cwd() / "CREDITS.md")
         write_overlay_enabled(True)
     typer.echo(format_init_summary(choice))
     typer.echo("")
-    if not allow_lossy_layers():
+    if not local_obs:
         typer.echo(
-            "Cold start: only lossless cache is live. Send traffic through the overlay, "
-            "then `openbundle check` to enable compression, routing, guardrails, "
-            "structured output, and sampled eval."
+            "Observability SDKs default to vendor hosted free tiers. "
+            "Traces leave this machine. Pass --local-obs to keep them here."
         )
         typer.echo("")
+    typer.echo(
+        "Input scanners fail-open so a broken extra never blocks you. "
+        "If one errors, `openbundle status` prints a DEGRADED banner, not a quiet live."
+    )
+    typer.echo(
+        "NeMo rails reuse your provider: extra tokens and latency when they fire "
+        "(nemo_rail_tokens on status). GPTCache and Semantic Router do not share "
+        "an embedding download unless a joint load test exists."
+    )
+    typer.echo("")
     if not scan.anthropic_key and not scan.openai_key:
         typer.echo("No ANTHROPIC_API_KEY or OPENAI_API_KEY in the environment.")
     typer.echo("Attach your client:")
@@ -254,7 +225,20 @@ def init(
     typer.echo(f"  # or OpenAI: base_url=http://{DEFAULT_HOST}:{DEFAULT_PORT}/v1")
     typer.echo("")
     typer.echo("Then:  openbundle serve")
+    typer.echo("Live number: openbundle status")
     typer.echo("Toggle: openbundle on | openbundle off")
+
+
+@app.command()
+def status(
+    config: Optional[Path] = typer.Option(None, "--config", "-c"),
+    no_banner: bool = typer.Option(False, "--no-banner"),
+) -> None:
+    """Per-stage live | warming | degraded | advisory | off. DEGRADED is a banner, not a table cell."""
+    _banner(no_banner, compact=True)
+    settings = load_settings(config)
+    pipeline = create_app(settings).state.pipeline
+    typer.echo(format_status(pipeline.registry, overlay_on=overlay_enabled(settings)))
 
 
 @config_app.callback(invoke_without_command=True)
@@ -267,10 +251,7 @@ def config_root(ctx: typer.Context, no_banner: bool = typer.Option(False, "--no-
     if path is None:
         scan = scan_env()
         choice = select(scan, extras)
-        active = {key: getattr(choice, key) for key in (
-            "cache", "coalesce", "memory", "context", "compress", "prompt_cache",
-            "routing", "guardrails", "structured", "eval", "batch",
-        )}
+        active = dict(choice.jobs)
     else:
         active = active_from_doc(read_config_doc(path))
     typer.echo(format_config_view(extras, active=active))
@@ -284,12 +265,16 @@ def config_set(
 ) -> None:
     """Swap one wrap category to a wired tool, or off."""
     _banner(no_banner, compact=True)
-    alias = {"compression": "compress", "caching": "cache", "hygiene": "context"}
+    alias = {
+        "compression": "compress",
+        "caching": "exact_hash",
+        "cache": "exact_hash",
+        "hygiene": "history",
+    }
     category = alias.get(category, category)
-    if category == "batch":
+    if category in {"batch", "memory"}:
         typer.echo(
-            "Batch API is not on the live path (no streaming). "
-            "Use Anthropic / OpenAI Batch for nightly or bulk jobs.",
+            f"{category} is advisory — not on the live path.",
             err=True,
         )
         raise typer.Exit(code=2)
@@ -347,16 +332,7 @@ def serve(
     if passthrough:
         settings.passthrough = True
         settings.layers.cache.enabled = False
-        settings.layers.memory.enabled = False
-        settings.layers.compress.enabled = False
-        settings.layers.routing.enabled = False
-        settings.layers.guardrails.enabled = False
-        settings.layers.structured.enabled = False
-        settings.layers.eval.enabled = False
-        settings.layers.coalesce.enabled = False
-        settings.layers.prompt_cache.enabled = False
-        settings.layers.context.enabled = False
-        settings.layers.batch.enabled = False
+        settings.jobs = {job_id: False for job_id in HOSTED_JOB_IDS}
     bind_host = host or settings.host
     bind_port = port or settings.port
     try:

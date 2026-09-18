@@ -12,8 +12,8 @@ def test_compress_does_not_change_cache_key(bundle_client, tmp_settings):
     layer = CompressLayer(CompressLayerConfig(enabled=True))
     layer._compressor = FakeCompressor()
     tmp_settings.layers.compress.enabled = True
-    bundle_client.app_obj.state.pipeline.compress = layer  # type: ignore[attr-defined]
-    bundle_client.app_obj.state.pipeline.settings.layers.compress.enabled = True  # type: ignore[attr-defined]
+    bundle_client.app_obj.state.pipeline.registry.publish("compress", layer, "live")
+    bundle_client.app_obj.state.pipeline.settings.layers.compress.enabled = True
 
     payload = {
         "model": "gpt-4.1",

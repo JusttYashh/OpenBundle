@@ -1,77 +1,81 @@
 profiles:
   api-app:
     bundle:
-      cache: sqlite_exact
+      exact_hash: sqlite_exact
       memory: none
-      compress: none
   coding-agent:
     bundle:
-      cache: sqlite_exact
+      exact_hash: sqlite_exact
       memory: none
-      compress: none
-  extras:
-    mem0: mem0
-    llmlingua: llmlingua2
 
 candidates:
-  cache:
+  exact_hash:
     - sqlite_exact
+  semantic_cache:
     - gptcache
-    - lmcache
   compress:
     - llmlingua2
     - llmlingua
-    - securitylingua
+  history:
     - selective_context
-    - autocompressor
+  rag_compress:
     - recomp
-    - pctoolkit
-  routing:
-    - prefix_router
-    - openrouter
-    - routellm
-    - litellm
-  guardrails:
-    - input_guard
+  secrets:
     - llm_guard
-    - guardrails_ai
-    - nemo_guardrails
+  pii:
+    - presidio
+  injection:
     - rebuff
-    - securitylingua
+  nemo_rails:
+    - nemo_guardrails
+  semantic_router:
+    - semantic_router
+  cost_route:
+    - routellm
+  litellm:
+    - litellm
+  output_validate:
+    - guardrails_ai
   structured:
-    - json_schema
     - instructor
     - pydantic_ai
     - baml
-    - mirascope
-  eval:
-    - sample_eval
+  eval_promptfoo:
     - promptfoo
+  eval_deepeval:
     - deepeval
     - ragas
-    - trulens
-    - openbench
+  eval_opik:
+    - opik
+    - phoenix
+  rag_faithfulness:
+    - rag_faithfulness
+    - lynx
+  obs_langfuse:
+    - langfuse
+  obs_openobserve:
+    - openobserve
+  obs_openmeter:
+    - openmeter
+  obs_agentops:
+    - agentops
+  obs_agenta:
+    - agenta
+  lmcache:
+    - lmcache
+  kvcached:
+    - kvcached
+  kvzip:
+    - kvzip
+  deepspec:
+    - deepspec
   memory:
     - mem0
-    - summary
-    - supermemory
-    - letta
     - zep
-    - langmem
+    - letta
     - cognee
-  coalesce:
-    - singleflight
-    - stampede
-    - llm_batch_coalesce
-    - aiocoalesce
-  prompt_cache:
-    - prompt_cache
-    - autocache
-    - langchain_smart_cache
-  context:
-    - session_hygiene
-    - openai_agents_context_compaction
-    - context_optimizer
-    - opencode_dcp
+    - supermemory
+    - langmem
+    - mempalace
   batch:
     - provider_batch

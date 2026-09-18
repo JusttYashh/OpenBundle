@@ -154,5 +154,5 @@ def _decode(payload: str) -> InternalResponse:
         completion_tokens=int(data.get("completion_tokens") or 0),
         model=str(data.get("model") or ""),
         protocol=data.get("protocol") or "openai",
-        layers=["cache"],
+        layers=["exact_hash"],
     )

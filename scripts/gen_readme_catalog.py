@@ -16,7 +16,10 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from openbundle.kb.catalog_table import render_catalog_page, replace_catalog_section  # noqa: E402
+from openbundle.kb.catalog_table import (  # noqa: E402
+    render_catalog_page,
+    replace_generated_sections,
+)
 from openbundle.kb.credits import render_credits  # noqa: E402
 
 
@@ -24,7 +27,7 @@ def sync(*, check: bool = False) -> int:
     readme_path = ROOT / "README.md"
     catalog_path = ROOT / "CATALOG.md"
     credits_path = ROOT / "CREDITS.md"
-    new_readme = replace_catalog_section(readme_path.read_text(encoding="utf-8"))
+    new_readme = replace_generated_sections(readme_path.read_text(encoding="utf-8"))
     new_catalog = render_catalog_page()
     new_credits = render_credits()
     old_readme = readme_path.read_text(encoding="utf-8")

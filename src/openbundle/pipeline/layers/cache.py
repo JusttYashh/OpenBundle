@@ -27,8 +27,6 @@ class CacheLayer:
         hit = self.store.get(key)
         if hit:
             return hit
-        if self.semantic:
-            return self.store.get_semantic(request)
         return None
 
     def store_response(self, request: InternalRequest, response: InternalResponse) -> None:
