@@ -15,7 +15,7 @@ htmlcov/
 *.sqlite
 *.db
 .DS_Store
-openbundle.yaml
+/openbundle.yaml
 .cursor/
 uploads/
 planpitch.txt
