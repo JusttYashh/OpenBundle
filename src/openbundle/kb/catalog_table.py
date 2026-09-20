@@ -44,7 +44,7 @@ def render_hero_line() -> str:
 def render_readme_summary() -> str:
     hosted, extra, advisory = job_headline_counts()
     return (
-        f"**{hosted} live jobs** for hosted-API users, **{extra}** more if self-hosted "
+        f"**{hosted} hosted-API jobs** for hosted-API users, **{extra}** more if self-hosted "
         f"inference or `--with-lynx` is detected, plus **{advisory}** advisory tools (memory + batch). "
         f"`openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · "
         "credits: [CREDITS.md](CREDITS.md).\n"

@@ -25,7 +25,7 @@ Read these before the catalog count.
 | Claim | What it actually is |
 |---|---|
 | Live number | `openbundle status` on **this** traffic. Paper ranges are not multiplied into a ceiling. |
-| NeMo rails | No bundled rail model. When dialogue rails fire they call **your** provider — extra tokens and latency, shown as `nemo_rail_tokens`. |
+| NeMo rails | LIVE only if NeMo Guardrails constructs with Colang. Import-only or empty config is `off`, not a keyword stand-in. Extra provider tokens only if that constructed rail actually calls out (`nemo_rail_tokens`). |
 | GPTCache + Semantic Router | Two independent warming jobs. Sharing one embedding download is **unverified**. |
 | LMCache / kvcached / KVzip | Self-hosted only, **not verified to work together**, and **not live** unless an adapter is constructed in this sidecar. |
 | Lynx-8B | Not default-live. `--with-lynx` does not print Lynx unless the adapter actually constructs. Hosted-API users get a citation/overlap heuristic. |
@@ -55,13 +55,15 @@ openbundle status
 
 ```bash
 pip install openbundle
-openbundle init      # overlay yaml; Tier B starts warming; never touches your repo
+openbundle init      # overlay yaml; LLMLingua may warm (model download); never touches your repo
 openbundle serve     # http://127.0.0.1:4180
 ```
 
+Default `pip install openbundle` includes exact-hash plus **GPTCache** and **LLMLingua-2** (that last one pulls torch / a local model). Everything else is `pip install openbundle[all]` or a per-job extra. `openbundle status` is what actually constructed — missing extras show `off`, not a vendor-named stub.
+
 ```bash
 openbundle on | off      # same URL, repo untouched
-openbundle attach        # Claude Code / Cursor / Codex env snippets
+openbundle attach        # Claude Code / Cursor / Codex / Aider snippets
 openbundle status        # live | warming | degraded | advisory | off
 openbundle report        # before/after table for this session
 openbundle uninstall     # --yes to skip the prompt
@@ -86,6 +88,8 @@ Cursor: Settings → Models → OpenAI-compatible. Base URL `http://127.0.0.1:41
 
 Codex / other OpenAI CLIs: `OPENAI_BASE_URL=http://127.0.0.1:4180/v1` and `OPENAI_API_KEY=openbundle`.
 
+Aider: `aider --openai-api-base http://127.0.0.1:4180/v1 --openai-api-key openbundle`.
+
 Do not point the agent at `openrouter.ai` if you want OpenBundle in the path. If Claude Code was logged into Anthropic, `/logout` once, restart, then `/status`.
 
 ## Pipeline order
@@ -93,18 +97,19 @@ Do not point the agent at `openrouter.ai` if you want OpenBundle in the path. If
 ```text
 exact-hash → semantic cache → compress (LLMLingua-2) → history prune (Selective Context)
   → RAG compress (RECOMP, if RAG) → secrets → PII → injection → NeMo rails
-  → Semantic Router → RouteLLM → LiteLLM → provider
+  → Semantic Router → RouteLLM (or first-party prefix router) → LiteLLM → provider
   → Guardrails AI → Instructor
   → eval trio (promptfoo / DeepEval / Opik, sampled, not blocking)
   → obs SDKs (Langfuse / OpenObserve / OpenMeter / AgentOps / Agenta)
+  → RAG faithfulness (Lynx, conditional / after the answer — not one of the 22)
 ```
 
-Cache keys **original** messages. Compress only on miss. Scans before the request leaves the box. Output validation after the model that actually answered.
+This is job order, not a promise every name is live. A stage runs only if that library constructed; otherwise `status` shows `off` / `warming`. Cache keys **original** messages. Compress only on miss. Scans before the request leaves the box. JSON retry is skipped on SSE. Output validation after the model that actually answered.
 
 ## The catalog
 
 <!-- CATALOG:START -->
-**22 live jobs** for hosted-API users, **5** more if self-hosted inference or `--with-lynx` is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).
+**22 hosted-API jobs** for hosted-API users, **5** more if self-hosted inference or `--with-lynx` is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).
 <!-- CATALOG:END -->
 
 Not this proxy (kept in the full catalog / credits, not on the live path): coalesce, prompt-cache inject, session hygiene, serving engines, quantizers, token-level constrained decoding, vector DBs, orchestration frameworks.

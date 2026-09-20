@@ -133,7 +133,7 @@ def test_readme_counts_match_shipping_catalog():
     block = readme.split(START, 1)[1].split(END, 1)[0]
     generated = render_readme_summary()
     assert generated.strip() == block.strip()
-    assert f"**{hosted} live jobs**" in block
+    assert f"**{hosted} hosted-API jobs**" in block
     hero = readme.split(HERO_START, 1)[1].split(HERO_END, 1)[0]
     assert render_hero_line().strip() == hero.strip()
     assert f"{hosted} hosted-API jobs + {extra} conditional = {hosted + extra}" in hero
