@@ -1,4 +1,4 @@
-"""Fail-open input scans: secrets (LLM Guard patterns), PII (Presidio), injection (Rebuff)."""
+"""Fail-open input scans. Vendor scanners only when the named library constructed."""
 
 from __future__ import annotations
 
@@ -42,8 +42,11 @@ def _map_text(request: InternalRequest, fn: Callable[[str], str]) -> InternalReq
 
 
 class SecretsScan:
+    """First-party regex redaction. Must not be published as LLM Guard."""
+
     job_id = "secrets"
     name = "secrets"
+    library: str | None = None
 
     def apply(self, request: InternalRequest) -> InternalRequest:
         def redact(text: str) -> str:
@@ -55,9 +58,32 @@ class SecretsScan:
         return _map_text(request, redact)
 
 
+class LlmGuardSecrets:
+    job_id = "secrets"
+    name = "secrets"
+    library = "llm_guard"
+
+    def __init__(self, scanner: Any) -> None:
+        self._scanner = scanner
+
+    def apply(self, request: InternalRequest) -> InternalRequest:
+        def redact(text: str) -> str:
+            result = self._scanner.scan(text)
+            if isinstance(result, tuple) and result:
+                return str(result[0])
+            if isinstance(result, str):
+                return result
+            return text
+
+        return _map_text(request, redact)
+
+
 class InjectionScan:
+    """First-party keyword flag. Must not be published as Rebuff."""
+
     job_id = "injection"
     name = "injection"
+    library: str | None = None
 
     def apply(self, request: InternalRequest) -> InternalRequest:
         def mark(text: str) -> str:
@@ -69,12 +95,41 @@ class InjectionScan:
         return _map_text(request, mark)
 
 
+class RebuffScan:
+    job_id = "injection"
+    name = "injection"
+    library = "rebuff"
+
+    def __init__(self, client: Any) -> None:
+        self._client = client
+
+    def apply(self, request: InternalRequest) -> InternalRequest:
+        def mark(text: str) -> str:
+            detect = getattr(self._client, "detect_injection", None) or getattr(
+                self._client, "is_injection", None
+            )
+            if detect is None:
+                return text
+            try:
+                flagged = detect(text)
+            except TypeError:
+                flagged = detect(user_input=text)
+            if flagged:
+                return "[injection_flag] " + text
+            return text
+
+        return _map_text(request, mark)
+
+
 class PiiScan:
     job_id = "pii"
     name = "pii"
+    library: str | None = None
 
     def __init__(self, analyzer: Any | None = None) -> None:
         self._analyzer = analyzer
+        if analyzer is not None:
+            self.library = "presidio"
 
     def apply(self, request: InternalRequest) -> InternalRequest:
         analyzer = self._analyzer

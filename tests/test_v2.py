@@ -9,7 +9,7 @@ from openbundle.cli import app
 from openbundle.config import StructuredLayerConfig
 from openbundle.kb.catalog import job_headline_counts, load_tools
 from openbundle.kb.catalog_table import END, HERO_END, HERO_START, START, render_hero_line, render_readme_summary, shipping_tools
-from openbundle.pipeline.jobs import HOSTED_JOB_COUNT, LIVE, SELF_HOSTED_JOB_COUNT
+from openbundle.pipeline.jobs import CONDITIONAL_JOB_COUNT, HOSTED_JOB_COUNT, LIVE
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest, InternalResponse
 
@@ -74,7 +74,7 @@ def test_structured_retry_on_invalid_json(tmp_settings):
 
     pipeline = Pipeline(tmp_settings, forwarder=Fwd(), warm=False)  # type: ignore[arg-type]
     pipeline.registry.publish(
-        "structured", JsonSchemaRetry(StructuredLayerConfig(enabled=True)), LIVE
+        "structured", JsonSchemaRetry(StructuredLayerConfig(enabled=True)), LIVE, tool_id="json_schema"
     )
     messages = [{"role": "user", "content": "give json"}]
     req = InternalRequest(
@@ -89,10 +89,45 @@ def test_structured_retry_on_invalid_json(tmp_settings):
     assert result.body["choices"][0]["message"]["content"] == '{"ok": true}'
 
 
+def test_structured_retry_skipped_on_sse(tmp_settings):
+    tmp_settings.layers.structured.enabled = True
+    tmp_settings.layers.cache.enabled = False
+    tmp_settings.jobs = {"structured": True}
+
+    class Fwd:
+        def __init__(self) -> None:
+            self.n = 0
+
+        async def forward(self, request):
+            self.n += 1
+            return InternalResponse(
+                ok=True,
+                stream=True,
+                body={"choices": [{"message": {"content": "not-json"}}]},
+            )
+
+    pipeline = Pipeline(tmp_settings, forwarder=Fwd(), warm=False)  # type: ignore[arg-type]
+    pipeline.registry.publish(
+        "structured", JsonSchemaRetry(StructuredLayerConfig(enabled=True)), LIVE, tool_id="json_schema"
+    )
+    messages = [{"role": "user", "content": "give json"}]
+    req = InternalRequest(
+        protocol="openai",
+        model="gpt-4.1",
+        messages=deepcopy(messages),
+        original_messages=deepcopy(messages),
+        stream=True,
+        body={"messages": messages, "response_format": {"type": "json_object"}, "stream": True},
+    )
+    result = asyncio.run(pipeline.run(req))
+    assert pipeline.forwarder.n == 1  # type: ignore[attr-defined]
+    assert result.stream is True
+
+
 def test_readme_counts_match_shipping_catalog():
-    hosted, self_hosted, advisory = job_headline_counts()
-    assert hosted == HOSTED_JOB_COUNT == 23
-    assert self_hosted == SELF_HOSTED_JOB_COUNT == 4
+    hosted, extra, advisory = job_headline_counts()
+    assert hosted == HOSTED_JOB_COUNT == 22
+    assert extra == CONDITIONAL_JOB_COUNT == 5
     assert advisory >= 8
     readme = Path("README.md").read_text(encoding="utf-8")
     block = readme.split(START, 1)[1].split(END, 1)[0]
@@ -101,7 +136,7 @@ def test_readme_counts_match_shipping_catalog():
     assert f"**{hosted} live jobs**" in block
     hero = readme.split(HERO_START, 1)[1].split(HERO_END, 1)[0]
     assert render_hero_line().strip() == hero.strip()
-    assert f"{hosted} hosted-API jobs + {self_hosted} self-hosted = {hosted + self_hosted}" in hero
+    assert f"{hosted} hosted-API jobs + {extra} conditional = {hosted + extra}" in hero
     catalog_page = Path("CATALOG.md").read_text(encoding="utf-8")
     assert "not verified to work together" in catalog_page.lower() or "not verified" in catalog_page
     credits = Path("CREDITS.md").read_text(encoding="utf-8")

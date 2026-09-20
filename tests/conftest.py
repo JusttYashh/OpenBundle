@@ -15,6 +15,7 @@ def _isolate_openbundle_home(tmp_path, monkeypatch):
     state = tmp_path / "ob-home"
     monkeypatch.setattr("openbundle.config.state_dir", lambda: state)
     monkeypatch.setenv("OPENBUNDLE_NO_WARMING", "1")
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
 
 
 @pytest.fixture

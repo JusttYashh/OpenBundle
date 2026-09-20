@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from openbundle.kb.catalog import job_headline_counts, load_tools
-from openbundle.pipeline.jobs import HOSTED_JOBS, SELF_HOSTED_JOBS
+from openbundle.pipeline.jobs import CONDITIONAL_JOBS, HOSTED_JOBS
 
 START = "<!-- CATALOG:START -->"
 END = "<!-- CATALOG:END -->"
@@ -11,10 +11,10 @@ HERO_START = "<!-- HERO:START -->"
 HERO_END = "<!-- HERO:END -->"
 
 def lane_titles() -> dict[str, str]:
-    hosted, self_hosted, _advisory = job_headline_counts()
+    hosted, extra, _advisory = job_headline_counts()
     return {
         "hosted": f"{hosted} jobs for hosted APIs",
-        "self_hosted": f"{self_hosted} more if you run local inference",
+        "self_hosted": f"{extra} more if local inference / --with-lynx",
         "advisory": "Advisory — not on the live path",
     }
 
@@ -33,30 +33,30 @@ def catalog_counts() -> tuple[int, int, int]:
 
 
 def render_hero_line() -> str:
-    hosted, self_hosted, _advisory = job_headline_counts()
-    total = hosted + self_hosted
+    hosted, extra, _advisory = job_headline_counts()
+    total = hosted + extra
     return (
-        f"**{hosted} hosted-API jobs + {self_hosted} self-hosted = {total} named tools.** "
+        f"**{hosted} hosted-API jobs + {extra} conditional = {total} named tools.** "
         "`openbundle status` is the live number on this traffic — not a multiplied ceiling.\n"
     )
 
 
 def render_readme_summary() -> str:
-    hosted, self_hosted, advisory = job_headline_counts()
+    hosted, extra, advisory = job_headline_counts()
     return (
-        f"**{hosted} live jobs** for hosted-API users, **{self_hosted}** more if self-hosted "
-        f"inference is detected, plus **{advisory}** advisory tools (memory + batch). "
+        f"**{hosted} live jobs** for hosted-API users, **{extra}** more if self-hosted "
+        f"inference or `--with-lynx` is detected, plus **{advisory}** advisory tools (memory + batch). "
         f"`openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · "
         "credits: [CREDITS.md](CREDITS.md).\n"
     )
 
 
 def render_catalog_block() -> str:
-    hosted, self_hosted, advisory = job_headline_counts()
+    hosted, extra, advisory = job_headline_counts()
     lines = [
         (
-            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{self_hosted}** "
-            f"if local inference is detected. **{advisory}** tools are advisory (never in the live path)."
+            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{extra}** "
+            f"if local inference / `--with-lynx` is detected. **{advisory}** tools are advisory (never in the live path)."
         ),
         "",
     ]
@@ -65,13 +65,13 @@ def render_catalog_block() -> str:
 
 
 def render_catalog_page() -> str:
-    hosted, self_hosted, advisory = job_headline_counts()
+    hosted, extra, advisory = job_headline_counts()
     lines = [
         "# Catalog",
         "",
         (
-            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{self_hosted}** "
-            f"if local inference is detected. **{advisory}** tools are advisory (never in the live path)."
+            f"OpenBundle runs **{hosted}** distinct jobs for hosted APIs, plus **{extra}** "
+            f"if local inference / `--with-lynx` is detected. **{advisory}** tools are advisory (never in the live path)."
         ),
         "",
     ]
@@ -99,10 +99,11 @@ def _job_tables(heading: str) -> list[str]:
     lines.append(f"{heading} {titles['self_hosted']}")
     lines.append("")
     lines.append("LMCache, kvcached, and KVzip are not verified to work together.")
+    lines.append("RAG faithfulness (Lynx) is conditional — not one of the 22 hosted jobs.")
     lines.append("")
     lines.append("| Job | Tool | License |")
     lines.append("|---|---|---|")
-    for job in SELF_HOSTED_JOBS:
+    for job in CONDITIONAL_JOBS:
         tool = by_id.get(job.tool_id)
         if tool is None:
             continue

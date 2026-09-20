@@ -38,6 +38,8 @@ def _is_json(text: str) -> bool:
 
 class JsonSchemaRetry:
     name = "structured"
+    job_id = "structured"
+    library: str | None = None
 
     def __init__(self, config: StructuredLayerConfig) -> None:
         self.config = config

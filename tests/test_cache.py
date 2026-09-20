@@ -70,6 +70,7 @@ def test_semantic_opt_in(bundle_client):
         return hit
 
     stage = SemanticCacheStage(lookup=lookup)
+    stage.library = "gptcache"
     bundle_client.app_obj.state.pipeline.registry.publish("semantic_cache", stage, LIVE)
     similar = bundle_client.post(
         "/v1/chat/completions",

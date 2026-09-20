@@ -27,12 +27,53 @@ dependencies = [
     "tiktoken>=0.8.0",
     "typer>=0.12.0",
     "python-dotenv>=1.0.1",
+    "gptcache>=0.1.43",
+    "llmlingua>=0.2.0",
 ]
 
 [project.optional-dependencies]
 mem0 = ["mem0ai>=0.1.0"]
 llmlingua = ["llmlingua>=0.2.0"]
-all = ["mem0ai>=0.1.0", "llmlingua>=0.2.0"]
+gptcache = ["gptcache>=0.1.43"]
+selective_context = ["selective-context"]
+recomp = ["recomp"]
+presidio = ["presidio-analyzer"]
+semantic_router = ["semantic-router[local]"]
+litellm = ["litellm"]
+instructor = ["instructor"]
+guardrails_ai = ["guardrails-ai"]
+nemo_guardrails = ["nemoguardrails"]
+llm_guard = ["llm-guard"]
+rebuff = ["rebuff"]
+routellm = ["routellm"]
+langfuse = ["langfuse"]
+openobserve = ["openobserve"]
+openmeter = ["openmeter"]
+agentops = ["agentops"]
+agenta = ["agenta"]
+deepeval = ["deepeval"]
+opik = ["opik"]
+all = [
+    "mem0ai>=0.1.0",
+    "llmlingua>=0.2.0",
+    "gptcache>=0.1.43",
+    "selective-context",
+    "presidio-analyzer",
+    "semantic-router[local]",
+    "litellm",
+    "instructor",
+    "guardrails-ai",
+    "nemoguardrails",
+    "llm-guard",
+    "rebuff",
+    "routellm",
+    "langfuse",
+    "openmeter",
+    "agentops",
+    "agenta",
+    "deepeval",
+    "opik",
+]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
@@ -48,7 +89,7 @@ Homepage = "https://github.com/openbundle/openbundle"
 where = ["src"]
 
 [tool.setuptools.package-data]
-openbundle = ["kb/*.yaml"]
+openbundle = ["kb/*.yaml", "adapters/nemo/*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

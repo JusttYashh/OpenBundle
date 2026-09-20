@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from openbundle.config import Settings, load_settings, overlay_enabled
 from openbundle.metrics.samples import record_sample
 from openbundle.metrics.session import SessionLog
-from openbundle.pipeline.jobs import HOSTED_JOB_IDS, SELF_HOSTED_JOB_IDS
+from openbundle.pipeline.jobs import STATUS_JOB_IDS
 from openbundle.pipeline.runner import Pipeline
 from openbundle.pipeline.types import InternalRequest, InternalResponse
 from openbundle.proxy.anthropic_api import parse_anthropic
@@ -32,7 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         pipeline: Pipeline = app.state.pipeline
         infos = pipeline.registry.info_snapshot()
         stages = {}
-        for job_id in HOSTED_JOB_IDS + SELF_HOSTED_JOB_IDS:
+        for job_id in STATUS_JOB_IDS:
             info = infos.get(job_id)
             state = info.state if info else "off"
             live = bool(on and pipeline.registry.is_constructed_live(job_id))
@@ -125,6 +125,7 @@ async def _handle_stream(
         extra.update(_cache_header(True))
         return StreamingResponse(replay(), media_type="text/event-stream", headers=extra)
 
+    working = await pipeline._maybe_nemo(working, stages)
     live = pipeline.forwarder.live_stream(working)
     first = await anext(live, None)
     if first is None:

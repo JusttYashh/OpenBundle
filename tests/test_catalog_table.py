@@ -14,16 +14,16 @@ from openbundle.kb.catalog_table import (
     replace_hero_section,
     shipping_tools,
 )
-from openbundle.pipeline.jobs import HOSTED_JOB_COUNT, SELF_HOSTED_JOB_COUNT
+from openbundle.pipeline.jobs import CONDITIONAL_JOB_COUNT, HOSTED_JOB_COUNT
 
 
 def test_catalog_block_lists_shipping_tools():
-    hosted, self_hosted, advisory = job_headline_counts()
+    hosted, extra, advisory = job_headline_counts()
     block = render_catalog_block()
     assert str(hosted) in block
-    assert str(self_hosted) in block
+    assert str(extra) in block
     assert hosted == HOSTED_JOB_COUNT
-    assert self_hosted == SELF_HOSTED_JOB_COUNT
+    assert extra == CONDITIONAL_JOB_COUNT
     assert lane_titles()["hosted"] in block
     assert "not verified to work together" in block
     assert "GPTCache" in block
@@ -61,14 +61,14 @@ def test_readme_has_markers():
 
 
 def test_readme_hero_is_generated_not_hand_typed():
-    hosted, self_hosted, _advisory = job_headline_counts()
-    total = hosted + self_hosted
+    hosted, extra, _advisory = job_headline_counts()
+    total = hosted + extra
     text = Path("README.md").read_text(encoding="utf-8")
     hero = text.split(HERO_START, 1)[1].split(HERO_END, 1)[0]
     catalog = text.split(START, 1)[1].split(END, 1)[0]
     assert render_hero_line().strip() == hero.strip()
     assert str(hosted) in hero
-    assert str(self_hosted) in hero
+    assert str(extra) in hero
     assert str(total) in hero
     remainder = text.replace(hero, "").replace(catalog, "")
     # 127.0.0.1 contains the substring "27"; ignore IPs.

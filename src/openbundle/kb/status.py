@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from openbundle.kb.catalog import credit_line
-from openbundle.pipeline.jobs import HOSTED_JOB_IDS, JOB_BY_ID, SELF_HOSTED_JOB_IDS
+from openbundle.pipeline.jobs import JOB_BY_ID, STATUS_JOB_IDS
 from openbundle.pipeline.registry import StageRegistry
 
 
@@ -25,7 +25,7 @@ def format_status(registry: StageRegistry, *, overlay_on: bool = True) -> str:
     infos = registry.info_snapshot()
     constructed = set(registry.snapshot())
     lines.append(f"{'job':<22} {'state':<10} tool")
-    for job_id in HOSTED_JOB_IDS + SELF_HOSTED_JOB_IDS:
+    for job_id in STATUS_JOB_IDS:
         info = infos.get(job_id)
         if info is None:
             continue
@@ -50,5 +50,5 @@ def format_status(registry: StageRegistry, *, overlay_on: bool = True) -> str:
         lines.append("rag_faithfulness: Lynx-8B")
     else:
         lines.append("rag_faithfulness: heuristic (not Lynx)")
-    lines.append(f"obs: {'local' if registry.local_obs else 'vendor hosted free tier'}")
+    lines.append(f"obs: {'self-host' if registry.local_obs else 'vendor hosted free tier'}")
     return "\n".join(lines)

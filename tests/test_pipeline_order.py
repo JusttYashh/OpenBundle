@@ -12,6 +12,8 @@ def test_compress_before_route(tmp_settings):
     order: list[str] = []
 
     class Comp(CompressLayer):
+        library = "llmlingua"
+
         def apply(self, request):
             order.append("compress")
             return request
@@ -24,7 +26,7 @@ def test_compress_before_route(tmp_settings):
     tmp_settings.jobs = {"exact_hash": True, "compress": True, "cost_route": True}
     pipeline = Pipeline(tmp_settings, warm=False)
     pipeline.registry.publish("compress", Comp(CompressLayerConfig(enabled=True)), LIVE)
-    pipeline.registry.publish("cost_route", Route(), LIVE)
+    pipeline.registry.publish("cost_route", Route(), LIVE, tool_id="prefix_router")
     messages = [{"role": "user", "content": f"m{i}"} for i in range(6)]
     req = InternalRequest(
         protocol="openai",
@@ -41,6 +43,8 @@ def test_semantic_cache_skipped_on_exact_hit(tmp_settings):
     semantic_ran = []
 
     class Sem(SemanticCacheStage):
+        library = "gptcache"
+
         def lookup(self, request):
             semantic_ran.append(True)
             return InternalResponse(ok=True, body={})

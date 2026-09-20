@@ -61,7 +61,7 @@ Also at: https://openbundle.dev/credits
   Opik (github.com/comet-ml/opik, Apache-2.0)
 
 - OpenBundle RAG faithfulness heuristic — MIT
-  OpenBundle RAG faithfulness heuristic (Lynx-8B stand-in, MIT)
+  OpenBundle RAG faithfulness heuristic (not Lynx, MIT)
 
 - [Patronus Lynx-8B](https://huggingface.co/PatronusAI/Llama-3-Patronus-Lynx-8B-Instruct) — Apache-2.0
   Patronus Lynx-8B (huggingface.co/PatronusAI, Apache-2.0)

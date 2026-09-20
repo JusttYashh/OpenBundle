@@ -9,8 +9,7 @@ import time
 from collections.abc import AsyncIterator
 from typing import Any
 
-from openbundle.adapters.json_schema import JsonSchemaRetry
-from openbundle.adapters.named import FaithfulnessHeuristic, ObsSink, SampledEval, SemanticCacheStage
+from openbundle.adapters.named import SemanticCacheStage
 from openbundle.adapters.nemo_rails import NemoRails
 from openbundle.config import Settings, overlay_enabled
 from openbundle.metrics.tokens import count_messages
@@ -166,6 +165,16 @@ class Pipeline:
             cache = stages.get("exact_hash")
             if isinstance(cache, CacheLayer):
                 cache.store_response(request, result)
+            semantic = stages.get("semantic_cache")
+            store = getattr(semantic, "store", None)
+            if callable(store):
+                try:
+                    store(request, result)
+                    if self.registry.get_info("semantic_cache").state == DEGRADED:
+                        self.registry.recover("semantic_cache")
+                except Exception as exc:
+                    self.registry.fail_open("semantic_cache", exc)
+                    result.fail_open = list(result.fail_open) + ["semantic_cache"]
         if not result.cache_hit and not request.passthrough:
             self._after(request, working, result, stages)
         return result
@@ -185,18 +194,19 @@ class Pipeline:
             if info.hard_down:
                 continue
             try:
-                if isinstance(stage, FaithfulnessHeuristic):
-                    extra = stage.score(working, result)
-                    if extra.get("eval"):
+                score = getattr(stage, "score", None)
+                emit = getattr(stage, "emit", None)
+                if callable(score):
+                    try:
+                        extra = score(working, result)
+                    except TypeError:
+                        extra = score(result)
+                    if isinstance(extra, dict) and extra.get("eval"):
                         result.eval_status = extra.get("eval") or result.eval_status
                         result.eval_reason = extra.get("eval_reason") or result.eval_reason
-                elif isinstance(stage, SampledEval):
-                    extra = stage.score(result)
-                    result.eval_status = extra.get("eval") or result.eval_status
-                    result.eval_reason = extra.get("eval_reason") or result.eval_reason
-                elif isinstance(stage, ObsSink):
-                    stage.emit(result)
-                elif info.state == DEGRADED:
+                elif callable(emit):
+                    emit(result)
+                if info.state == DEGRADED:
                     self.registry.recover(job_id)
             except Exception as exc:
                 self.registry.fail_open(job_id, exc)
@@ -208,7 +218,7 @@ class Pipeline:
         stages: dict[str, Any],
     ) -> InternalRequest:
         stage = stages.get("nemo_rails")
-        if not isinstance(stage, NemoRails) or not stage.llm_check:
+        if not isinstance(stage, NemoRails) or not getattr(stage, "uses_sidecar_llm", False):
             return working
         blob = " ".join(
             str(m.get("content") or "") for m in working.original_messages if m.get("role") == "user"
@@ -239,10 +249,14 @@ class Pipeline:
         result: InternalResponse,
         stages: dict[str, Any],
     ) -> InternalResponse:
+        if getattr(working, "stream", False) or getattr(result, "stream", False):
+            return result
         for job_id in ("output_validate", "structured"):
             stage = stages.get(job_id)
-            if isinstance(stage, JsonSchemaRetry) and stage.should_retry(working, result):
-                retry_req = stage.retry_request(working)
+            should = getattr(stage, "should_retry", None)
+            retry = getattr(stage, "retry_request", None)
+            if callable(should) and callable(retry) and should(working, result):
+                retry_req = retry(working)
                 result = await self.forwarder.forward(retry_req)
         return result
 
@@ -252,8 +266,21 @@ class Pipeline:
         if hit:
             return self.finalize(request, working, before, hit, started, stages)
         working = await self._maybe_nemo(working, stages)
-        result = await self.forwarder.forward(working)
-        result = await self._maybe_structured_retry(working, result, stages)
+        litellm = stages.get("litellm")
+        complete = getattr(litellm, "complete", None)
+        if callable(complete):
+            try:
+                result = await complete(working)
+            except Exception as exc:
+                self.registry.fail_open("litellm", exc)
+                fo = list(getattr(working, "_fail_open", []) or [])
+                fo.append("litellm")
+                setattr(working, "_fail_open", fo)
+                result = await self.forwarder.forward(working)
+        else:
+            result = await self.forwarder.forward(working)
+        if not working.stream:
+            result = await self._maybe_structured_retry(working, result, stages)
         result.stream = request.stream
         return self.finalize(request, working, before, result, started, stages)
 

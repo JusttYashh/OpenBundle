@@ -13,6 +13,8 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4180
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 EXPOSE_HOSTS = {"0.0.0.0", "::", "::0"}
+OPENROUTER_ANTHROPIC_BASE = "https://openrouter.ai/api"
+OPENROUTER_OPENAI_BASE = "https://openrouter.ai/api/v1"
 
 
 class ProviderConfig(BaseModel):
@@ -197,6 +199,10 @@ def resolve_secret(value: str) -> str:
     return value
 
 
+def is_openrouter_url(url: str) -> bool:
+    return "openrouter.ai" in (url or "").lower()
+
+
 def default_config_candidates() -> list[Path]:
     env = os.environ.get("OPENBUNDLE_CONFIG")
     paths = []
@@ -224,6 +230,8 @@ def load_settings(path: Path | None = None) -> Settings:
                 used = str(candidate)
                 break
     settings = Settings.model_validate(data or {})
+    if data.get("self_host"):
+        settings.local_obs = True
     settings.config_path = used
     return settings
 

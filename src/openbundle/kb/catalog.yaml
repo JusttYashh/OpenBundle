@@ -22,10 +22,10 @@ tools:
   license: MIT
   how_open: oss
   status: active
-  extra: gptcache
+  extra: null
   url: https://github.com/zilliztech/GPTCache
   credit_line: GPTCache (github.com/zilliztech/GPTCache, MIT)
-  notes: Embedding backend is independent of Semantic Router; shared download is unverified.
+  notes: Base dependency. Embedding backend is independent of Semantic Router; shared download is unverified.
   lane: wrap
 - id: llmlingua2
   name: LLMLingua-2
@@ -36,10 +36,11 @@ tools:
   license: MIT
   how_open: oss
   status: active
-  extra: llmlingua
+  extra: null
   adapter: openbundle.adapters.llmlingua2
   url: https://github.com/microsoft/LLMLingua
   credit_line: LLMLingua-2 (github.com/microsoft/LLMLingua, MIT)
+  notes: Base dependency. Warming is allowed while the local model downloads.
   lane: wrap
 - id: llmlingua
   name: LLMLingua / LongLLMLingua
@@ -125,7 +126,7 @@ tools:
   adapter: openbundle.adapters.nemo_rails
   url: https://github.com/NVIDIA/NeMo-Guardrails
   credit_line: NeMo Guardrails (github.com/NVIDIA/NeMo-Guardrails, Apache-2.0)
-  notes: Calls the user's provider when llm_check is on — extra tokens and latency, not a bundled rail model.
+  notes: LIVE only when LLMRails constructs with Colang. Empty import is not NeMo live.
   lane: wrap
 - id: semantic_router
   name: Semantic Router
@@ -138,7 +139,7 @@ tools:
   extra: semantic_router
   url: https://github.com/aurelio-labs/semantic-router
   credit_line: Semantic Router (github.com/aurelio-labs/semantic-router, MIT)
-  notes: Does not share an embedding download with GPTCache unless a joint load test says so.
+  notes: Local HuggingFace/FastEmbed encoder only. OpenAI embeddings are never used (surprise cost).
   lane: wrap
 - id: routellm
   name: RouteLLM
@@ -151,6 +152,7 @@ tools:
   adapter: openbundle.adapters.named
   url: https://github.com/lm-sys/RouteLLM
   credit_line: RouteLLM (github.com/lm-sys/RouteLLM, MIT)
+  notes: Needs a strong/weak model pair. Zero-config sidecar routing is first-party prefix_router, never claimed as RouteLLM.
   lane: wrap
 - id: litellm
   name: LiteLLM
@@ -224,27 +226,28 @@ tools:
 - id: rag_faithfulness
   name: OpenBundle RAG faithfulness heuristic
   job: rag_faithfulness
-  tier: A
-  role: primary
+  tier: C
+  role: alternate
   categories: [evaluation]
   license: MIT
   how_open: oss
   status: active
   adapter: openbundle.adapters.named
-  credit_line: OpenBundle RAG faithfulness heuristic (Lynx-8B stand-in, MIT)
-  notes: Citation/overlap heuristic. Lynx-8B is not default-live.
+  credit_line: OpenBundle RAG faithfulness heuristic (not Lynx, MIT)
+  notes: Citation/overlap heuristic. Never displayed as Lynx.
   lane: wrap
 - id: lynx
   name: Patronus Lynx-8B
   job: rag_faithfulness
-  tier: C
-  role: alternate
+  tier: conditional
+  role: primary
   categories: [evaluation]
   license: Apache-2.0
   status: mapped
+  extra: lynx
   url: https://huggingface.co/PatronusAI/Llama-3-Patronus-Lynx-8B-Instruct
   credit_line: Patronus Lynx-8B (huggingface.co/PatronusAI, Apache-2.0)
-  notes: Same gate as stages 24–27, or --with-lynx. Not live by default.
+  notes: Conditional — `--with-lynx` and local weights. Not one of the 22 hosted jobs. Not live by default.
   lane: wrap
 - id: langfuse
   name: Langfuse
@@ -257,7 +260,7 @@ tools:
   status: active
   url: https://github.com/langfuse/langfuse
   credit_line: Langfuse (github.com/langfuse/langfuse, MIT)
-  notes: SDK → vendor hosted free tier by default. Traces leave this machine unless --local-obs.
+  notes: SDK → vendor hosted free tier by default. Traces leave this machine unless --self-host.
   lane: wrap
 - id: openobserve
   name: OpenObserve
@@ -270,7 +273,7 @@ tools:
   status: active
   url: https://github.com/openobserve/openobserve
   credit_line: OpenObserve (github.com/openobserve/openobserve, Apache-2.0)
-  notes: SDK → vendor hosted free tier by default. Traces leave this machine unless --local-obs.
+  notes: SDK → vendor hosted free tier by default. Traces leave this machine unless --self-host.
   lane: wrap
 - id: openmeter
   name: OpenMeter
@@ -309,7 +312,7 @@ tools:
   status: active
   url: https://github.com/Agenta-AI/agenta
   credit_line: Agenta (github.com/Agenta-AI/agenta, MIT)
-  notes: SDK → vendor hosted free tier by default. Traces leave this machine unless --local-obs.
+  notes: "SDK → vendor hosted free tier by default. Traces leave this machine unless --self-host. July 2026: Agenta moved from LLMOps platform toward an agent workspace — sidecar job 22 still uses the observability SDK, not a 24th hosted job or prompt playground."
   lane: wrap
 - id: lmcache
   name: LMCache
@@ -736,19 +739,22 @@ tools:
   lane: catalog_only
 - id: prefix_router
   name: OpenBundle prefix router
+  job: cost_route
+  tier: A
+  role: alternate
   categories: [routing]
   license: MIT
-  status: mapped
+  status: active
   credit_line: OpenBundle prefix router (first-party, MIT)
-  notes: Implementation detail behind RouteLLM.
-  lane: catalog_only
+  notes: First-party fallback when RouteLLM has no router config. Never displayed as RouteLLM.
+  lane: wrap
 - id: json_schema
   name: OpenBundle JSON schema retry
   categories: [structured_output]
   license: MIT
   status: mapped
   credit_line: OpenBundle JSON schema retry (first-party, MIT)
-  notes: Implementation detail behind Guardrails AI / Instructor.
+  notes: First-party JSON retry. Never displayed as Guardrails AI or Instructor.
   lane: catalog_only
 - id: input_guard
   name: OpenBundle input guardrails

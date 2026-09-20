@@ -1,8 +1,8 @@
 # Catalog
 
-OpenBundle runs **23** distinct jobs for hosted APIs, plus **4** if local inference is detected. **8** tools are advisory (never in the live path).
+OpenBundle runs **22** distinct jobs for hosted APIs, plus **5** if local inference / `--with-lynx` is detected. **8** tools are advisory (never in the live path).
 
-## 23 jobs for hosted APIs
+## 22 jobs for hosted APIs
 
 | Job | Tool | License | Tier |
 |---|---|---|---|
@@ -23,19 +23,20 @@ OpenBundle runs **23** distinct jobs for hosted APIs, plus **4** if local infere
 | promptfoo | [promptfoo](https://github.com/promptfoo/promptfoo) | MIT | A |
 | DeepEval | [DeepEval](https://github.com/confident-ai/deepeval) | Apache-2.0 | A |
 | Opik | [Opik](https://github.com/comet-ml/opik) | Apache-2.0 | A |
-| RAG faithfulness | OpenBundle RAG faithfulness heuristic | MIT | A |
 | Langfuse | [Langfuse](https://github.com/langfuse/langfuse) | MIT | C |
 | OpenObserve | [OpenObserve](https://github.com/openobserve/openobserve) | Apache-2.0 | C |
 | OpenMeter | [OpenMeter](https://github.com/openmeterio/openmeter) | Apache-2.0 | A |
 | AgentOps | [AgentOps](https://github.com/AgentOps-AI/agentops) | MIT | A |
 | Agenta | [Agenta](https://github.com/Agenta-AI/agenta) | MIT | C |
 
-## 4 more if you run local inference
+## 5 more if local inference / --with-lynx
 
 LMCache, kvcached, and KVzip are not verified to work together.
+RAG faithfulness (Lynx) is conditional — not one of the 22 hosted jobs.
 
 | Job | Tool | License |
 |---|---|---|
+| RAG faithfulness | [Patronus Lynx-8B](https://huggingface.co/PatronusAI/Llama-3-Patronus-Lynx-8B-Instruct) | Apache-2.0 |
 | LMCache | [LMCache](https://github.com/LMCache/LMCache) | Apache-2.0 |
 | kvcached | [kvcached](https://github.com/ovg-project/kvcached) | Apache-2.0 |
 | KVzip | [KVzip](https://github.com/snu-mllab/KVzip) | MIT |

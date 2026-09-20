@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+
+from openbundle.config import DEFAULT_HOST, DEFAULT_PORT
 from openbundle.kb.catalog import (
     ADVISORY_CATEGORIES,
     INIT_SKIP_GENERIC,
@@ -37,6 +40,12 @@ def format_init_summary(choice: Selection) -> str:
                     f"  ○ {JOB_BY_ID[job_id].label:<22} → {credit_line(tool_id)} "
                     "(engine-side, not verified together)"
                 )
+    if choice.with_lynx:
+        lines.append("")
+        lines.append(
+            "  ○ RAG faithfulness      → Patronus Lynx-8B "
+            "(conditional; live only if local weights construct)"
+        )
     lines.extend(
         [
             "",
@@ -46,6 +55,68 @@ def format_init_summary(choice: Selection) -> str:
             "",
             "OpenBundle does not replace these tools — it selects, configures, and",
             "runs them together for you. Full credits: CREDITS.md",
+        ]
+    )
+    if choice.openrouter:
+        lines.extend(
+            [
+                "",
+                "Upstream: OpenRouter (OPENROUTER_API_KEY). Both Anthropic and OpenAI",
+                "paths on the sidecar forward there. Agents still attach to 127.0.0.1.",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def format_attach_instructions(*, listen: str | None = None, shell: str | None = None) -> str:
+    """How coding agents talk to this sidecar — not to OpenRouter directly."""
+    listen = listen or f"{DEFAULT_HOST}:{DEFAULT_PORT}"
+    host = f"http://{listen}"
+    openai_base = f"{host}/v1"
+    powershell = (shell or ("powershell" if os.name == "nt" else "bash")) == "powershell"
+    lines = [
+        "Attach a coding agent to this sidecar (not to OpenRouter/Anthropic directly).",
+        "The sidecar reads OPENROUTER_API_KEY / ANTHROPIC_API_KEY / OPENAI_API_KEY from its own environment.",
+        "",
+    ]
+    if powershell:
+        lines.extend(
+            [
+                "Claude Code (this PowerShell session, then `claude`):",
+                f'  $env:ANTHROPIC_BASE_URL = "{host}"',
+                '  $env:ANTHROPIC_AUTH_TOKEN = "openbundle"',
+                '  $env:ANTHROPIC_API_KEY = ""',
+                "",
+                "Codex / OpenAI-compatible CLIs:",
+                f'  $env:OPENAI_BASE_URL = "{openai_base}"',
+                '  $env:OPENAI_API_KEY = "openbundle"',
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "Claude Code (this shell, then `claude`):",
+                f"  export ANTHROPIC_BASE_URL={host}",
+                "  export ANTHROPIC_AUTH_TOKEN=openbundle",
+                '  export ANTHROPIC_API_KEY=""',
+                "",
+                "Codex / OpenAI-compatible CLIs:",
+                f"  export OPENAI_BASE_URL={openai_base}",
+                "  export OPENAI_API_KEY=openbundle",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            "Cursor: Settings → Models → OpenAI-compatible (or override OpenAI base URL)",
+            f"  Base URL: {openai_base}",
+            "  API key:  openbundle",
+            "",
+            "Aider:",
+            f"  aider --openai-api-base {openai_base} --openai-api-key openbundle",
+            "",
+            "If Claude Code was logged into Anthropic before, run `/logout` once, restart, then `/status`.",
+            "The base URL must be the sidecar — no trailing /v1 on ANTHROPIC_BASE_URL.",
         ]
     )
     return "\n".join(lines)

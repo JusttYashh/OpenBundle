@@ -26,6 +26,8 @@ def _looks_openai(model: str) -> bool:
 
 class PrefixRouter:
     name = "routing"
+    job_id = "cost_route"
+    library: str | None = None
 
     def __init__(self, config: RoutingLayerConfig) -> None:
         self.config = config

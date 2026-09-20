@@ -11,9 +11,9 @@ import yaml
 
 from openbundle.pipeline.jobs import (
     ADVISORY_CATEGORIES,
+    CONDITIONAL_JOB_COUNT,
     HOSTED_JOB_COUNT,
     LAYER_DEFAULT_TOOL,
-    SELF_HOSTED_JOB_COUNT,
     WRAP_JOBS,
 )
 
@@ -158,21 +158,9 @@ def lane_counts() -> dict[str, int]:
 
 
 def job_headline_counts() -> tuple[int, int, int]:
-    """(hosted primaries, self-hosted primaries, advisory tools). Generated, never hand-typed."""
-    hosted = 0
-    self_hosted = 0
-    advisory = 0
-    for tool in load_tools():
-        if tool.role == "primary" and tool.lane == "wrap" and tool.tier in {"A", "B", "C"}:
-            hosted += 1
-        elif tool.role == "primary" and tool.tier == "self_hosted":
-            self_hosted += 1
-        elif tool.lane == "advisory":
-            advisory += 1
-    if hosted != HOSTED_JOB_COUNT or self_hosted != SELF_HOSTED_JOB_COUNT:
-        # still return actual catalog counts; tests lock equality with HOSTED_JOB_COUNT
-        pass
-    return hosted, self_hosted, advisory
+    """(hosted jobs, conditional jobs, advisory tools). Generated, never hand-typed."""
+    advisory = sum(1 for tool in load_tools() if tool.lane == "advisory")
+    return HOSTED_JOB_COUNT, CONDITIONAL_JOB_COUNT, advisory
 
 
 def credit_for_layer(layer: str) -> str:

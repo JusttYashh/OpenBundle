@@ -38,6 +38,7 @@ class Selection:
     local_inference: bool = False
     with_lynx: bool = False
     local_obs: bool = False
+    openrouter: bool = False
 
     def __getattr__(self, name: str) -> str:
         if name in self.jobs:
@@ -157,6 +158,19 @@ def select(
         jobs[job_id] = default
         live[job_id] = False
 
+    if with_lynx:
+        jobs["rag_faithfulness"] = "lynx"
+        live["rag_faithfulness"] = False
+        details["rag_faithfulness"] = CategoryChoice(
+            "rag_faithfulness",
+            "lynx",
+            live=False,
+            reasons={"lynx": "conditional — live only if Lynx-8B constructs"},
+        )
+    else:
+        jobs["rag_faithfulness"] = "none"
+        live["rag_faithfulness"] = False
+
     for category in ADVISORY_CATEGORIES:
         reasons = {tool.id: "you add this yourself — not on the live path" for tool in tools_in_category(category)}
         details[category] = CategoryChoice(category, "none", live=False, reasons=reasons)
@@ -172,6 +186,7 @@ def select(
         local_inference=local,
         with_lynx=with_lynx and (local or with_lynx),
         local_obs=local_obs,
+        openrouter=bool(scan.openrouter_key),
     )
 
 

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 class ScanResult:
     anthropic_key: bool = False
     openai_key: bool = False
+    openrouter_key: bool = False
     coding_agent: bool = False
     hints: list[str] = field(default_factory=list)
 
@@ -37,6 +38,22 @@ def installed_extras() -> list[str]:
         "presidio-analyzer": "presidio",
         "semantic-router": "semantic_router",
         "lmcache": "lmcache",
+        "kvcached": "kvcached",
+        "kvzip": "kvzip",
+        "selective-context": "selective_context",
+        "litellm": "litellm",
+        "instructor": "instructor",
+        "guardrails-ai": "guardrails_ai",
+        "nemoguardrails": "nemo_guardrails",
+        "llm-guard": "llm_guard",
+        "rebuff": "rebuff",
+        "routellm": "routellm",
+        "langfuse": "langfuse",
+        "openmeter": "openmeter",
+        "agentops": "agentops",
+        "agenta": "agenta",
+        "deepeval": "deepeval",
+        "opik": "opik",
     }
     for dist, extra in mapping.items():
         if _has_dist(dist):
@@ -48,12 +65,16 @@ def scan_env() -> ScanResult:
     result = ScanResult()
     result.anthropic_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
     result.openai_key = bool(os.environ.get("OPENAI_API_KEY"))
+    result.openrouter_key = bool(os.environ.get("OPENROUTER_API_KEY"))
     if shutil.which("claude") or os.environ.get("CLAUDE_CODE") or os.environ.get("CLAUDECODE"):
         result.coding_agent = True
         result.hints.append("claude")
     if shutil.which("cursor") or os.environ.get("CURSOR_TRACE_ID"):
         result.coding_agent = True
         result.hints.append("cursor")
+    if shutil.which("codex") or os.environ.get("CODEX"):
+        result.coding_agent = True
+        result.hints.append("codex")
     if shutil.which("aider"):
         result.coding_agent = True
         result.hints.append("aider")

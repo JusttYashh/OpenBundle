@@ -17,6 +17,8 @@ from openbundle.banner import print_banner
 from openbundle.config import (
     DEFAULT_HOST,
     DEFAULT_PORT,
+    OPENROUTER_ANTHROPIC_BASE,
+    OPENROUTER_OPENAI_BASE,
     BindError,
     env_overlay_set,
     find_config_file,
@@ -38,6 +40,7 @@ from openbundle.kb.credits import write_credits
 from openbundle.kb.display import (
     active_from_doc,
     apply_bundle_to_doc,
+    format_attach_instructions,
     format_config_view,
     format_init_summary,
 )
@@ -73,14 +76,24 @@ def _write_config(output: Path, choice) -> None:
 
         for job_id in SELF_HOSTED_JOB_IDS:
             jobs[job_id] = True
+    if choice.with_lynx:
+        jobs["rag_faithfulness"] = True
     bundle = {job_id: choice.jobs.get(job_id, "none") for job_id in HOSTED_JOB_IDS}
     bundle["memory"] = "none"
     bundle["batch"] = "none"
-    doc = {
-        "listen": f"{DEFAULT_HOST}:{DEFAULT_PORT}",
-        "with_lynx": bool(choice.with_lynx),
-        "local_obs": bool(choice.local_obs),
-        "providers": {
+    if choice.openrouter:
+        providers = {
+            "anthropic": {
+                "api_key": "env:OPENROUTER_API_KEY",
+                "base_url": OPENROUTER_ANTHROPIC_BASE,
+            },
+            "openai": {
+                "api_key": "env:OPENROUTER_API_KEY",
+                "base_url": OPENROUTER_OPENAI_BASE,
+            },
+        }
+    else:
+        providers = {
             "anthropic": {
                 "api_key": "env:ANTHROPIC_API_KEY",
                 "base_url": "https://api.anthropic.com",
@@ -89,7 +102,12 @@ def _write_config(output: Path, choice) -> None:
                 "api_key": "env:OPENAI_API_KEY",
                 "base_url": "https://api.openai.com/v1",
             },
-        },
+        }
+    doc = {
+        "listen": f"{DEFAULT_HOST}:{DEFAULT_PORT}",
+        "with_lynx": bool(choice.with_lynx),
+        "local_obs": bool(choice.local_obs),
+        "providers": providers,
         "bundle": bundle,
         "jobs": jobs,
         "layers": {
@@ -178,12 +196,22 @@ def check(
 def init(
     output: Path = typer.Option(Path("openbundle.yaml"), "--output", "-o"),
     core_only: bool = typer.Option(False, "--core-only", help="Exact-hash only."),
-    with_lynx: bool = typer.Option(False, "--with-lynx", help="Enable Lynx-8B faithfulness if local inference exists."),
-    local_obs: bool = typer.Option(False, "--local-obs", help="Point obs SDKs at localhost instead of vendor hosted tiers."),
+    with_lynx: bool = typer.Option(False, "--with-lynx", help="Enable Lynx-8B faithfulness if local weights construct."),
+    self_host: bool = typer.Option(
+        False,
+        "--self-host",
+        help="Point obs SDKs at localhost instead of vendor hosted tiers.",
+    ),
+    local_obs: bool = typer.Option(
+        False,
+        "--local-obs",
+        help="Alias of --self-host.",
+    ),
     no_banner: bool = typer.Option(False, "--no-banner"),
 ) -> None:
-    """Resolve 23 jobs, write the overlay, start Tier B warming, regenerate CREDITS.md."""
+    """Resolve 22 jobs, write the overlay, start Tier B warming, regenerate CREDITS.md."""
     _banner(no_banner)
+    keep_local = bool(self_host or local_obs)
     with Pulse("Checking compatibility", show_logo=not no_banner):
         scan = scan_env()
         extras = [] if core_only else installed_extras()
@@ -194,7 +222,7 @@ def init(
             core_only=core_only,
             allow_lossy=True,
             with_lynx=with_lynx,
-            local_obs=local_obs,
+            local_obs=keep_local,
         )
     with Pulse("Writing config", show_logo=False):
         _write_config(output, choice)
@@ -202,10 +230,10 @@ def init(
         write_overlay_enabled(True)
     typer.echo(format_init_summary(choice))
     typer.echo("")
-    if not local_obs:
+    if not keep_local:
         typer.echo(
             "Observability SDKs default to vendor hosted free tiers. "
-            "Traces leave this machine. Pass --local-obs to keep them here."
+            "Traces leave this machine. Pass --self-host to keep them here."
         )
         typer.echo("")
     typer.echo(
@@ -218,15 +246,28 @@ def init(
         "an embedding download unless a joint load test exists."
     )
     typer.echo("")
-    if not scan.anthropic_key and not scan.openai_key:
-        typer.echo("No ANTHROPIC_API_KEY or OPENAI_API_KEY in the environment.")
-    typer.echo("Attach your client:")
-    typer.echo(f"  export ANTHROPIC_BASE_URL=http://{DEFAULT_HOST}:{DEFAULT_PORT}")
-    typer.echo(f"  # or OpenAI: base_url=http://{DEFAULT_HOST}:{DEFAULT_PORT}/v1")
+    if not scan.anthropic_key and not scan.openai_key and not scan.openrouter_key:
+        typer.echo("No OPENROUTER_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY in the environment.")
+    typer.echo("")
+    typer.echo(format_attach_instructions(listen=f"{DEFAULT_HOST}:{DEFAULT_PORT}"))
     typer.echo("")
     typer.echo("Then:  openbundle serve")
-    typer.echo("Live number: openbundle status")
+    typer.echo("Live number: openbundle status   (or GET /health on the running process)")
     typer.echo("Toggle: openbundle on | openbundle off")
+    typer.echo("Re-print attach env: openbundle attach")
+
+
+@app.command()
+def attach(
+    no_banner: bool = typer.Option(False, "--no-banner"),
+    bash: bool = typer.Option(False, "--bash", help="Print bash/zsh exports instead of PowerShell."),
+) -> None:
+    """Print env / settings so Claude Code, Cursor, and Codex hit this sidecar."""
+    _banner(no_banner, compact=True)
+    settings = load_settings()
+    listen = settings.listen or f"{DEFAULT_HOST}:{DEFAULT_PORT}"
+    shell = "bash" if bash else None
+    typer.echo(format_attach_instructions(listen=listen, shell=shell))
 
 
 @app.command()
@@ -401,9 +442,10 @@ def doctor(
         doc = read_config_doc(Path(settings.config_path))
         typer.echo(f"tools: {_credited_bundle(doc)}")
     typer.echo(f"extras: {', '.join(extras) if extras else '(none - light core)'}")
-    typer.echo(f"ANTHROPIC_API_KEY: {'yes' if scan.anthropic_key else 'missing'}")
-    typer.echo(f"OPENAI_API_KEY:    {'yes' if scan.openai_key else 'missing'}")
-    if not scan.anthropic_key and not scan.openai_key:
+    typer.echo(f"ANTHROPIC_API_KEY:  {'yes' if scan.anthropic_key else 'missing'}")
+    typer.echo(f"OPENAI_API_KEY:     {'yes' if scan.openai_key else 'missing'}")
+    typer.echo(f"OPENROUTER_API_KEY: {'yes' if scan.openrouter_key else 'missing'}")
+    if not scan.anthropic_key and not scan.openai_key and not scan.openrouter_key:
         ok = False
     app_obj = create_app(settings)
     with TestClient(app_obj) as client:

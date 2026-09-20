@@ -6,6 +6,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any
 
+from openbundle.pipeline.honesty import vendor_claim_ok
 from openbundle.pipeline.jobs import (
     ALL_JOBS,
     DEGRADED,
@@ -65,9 +66,22 @@ class StageRegistry:
         """Atomic pointer swap. `stage` must already be fully constructed.
 
         LIVE is refused without a stage object — status cannot claim live for a missing adapter.
+        Vendor tool_ids are refused unless the stage was built from that library.
         """
         if state == LIVE and stage is None:
             self.set_state(job_id, OFF, reason="refused live publish without a constructed stage")
+            return
+        claimed = tool_id
+        if claimed is None:
+            with self._lock:
+                claimed = self._info[job_id].tool_id
+        if state == LIVE and not vendor_claim_ok(claimed, stage):
+            self.set_state(
+                job_id,
+                OFF,
+                reason=f"refused live {claimed} without a constructed {claimed} adapter",
+                hard_down=True,
+            )
             return
         with self._lock:
             stages = dict(self._stages)

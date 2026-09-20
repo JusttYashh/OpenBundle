@@ -29,12 +29,12 @@ Read these before the catalog count.
 | GPTCache + Semantic Router | Two independent warming jobs. Sharing one embedding download is **unverified**. |
 | LMCache / kvcached / KVzip | Self-hosted only, **not verified to work together**, and **not live** unless an adapter is constructed in this sidecar. |
 | Lynx-8B | Not default-live. `--with-lynx` does not print Lynx unless the adapter actually constructs. Hosted-API users get a citation/overlap heuristic. |
-| Observability | SDKs default to vendor hosted free tiers. **Traces leave this machine** unless `--local-obs`. |
+| Observability | SDKs default to vendor hosted free tiers. **Traces leave this machine** unless `--self-host`. |
 | Scanners | Secrets / PII / injection **fail-open**. A crash prints `DEGRADED:` — not a quiet `live`. Retry on the next request; success returns `live`; session `fail_open_count` stays. |
 | This overlay | MIT, localhost, pre-seed. No moat. One named tool per job. |
 
 <!-- HERO:START -->
-**23 hosted-API jobs + 4 self-hosted = 27 named tools.** `openbundle status` is the live number on this traffic — not a multiplied ceiling.
+**22 hosted-API jobs + 5 conditional = 27 named tools.** `openbundle status` is the live number on this traffic — not a multiplied ceiling.
 <!-- HERO:END -->
 
 ```bash
@@ -61,12 +61,32 @@ openbundle serve     # http://127.0.0.1:4180
 
 ```bash
 openbundle on | off      # same URL, repo untouched
+openbundle attach        # Claude Code / Cursor / Codex env snippets
 openbundle status        # live | warming | degraded | advisory | off
 openbundle report        # before/after table for this session
 openbundle uninstall     # --yes to skip the prompt
 ```
 
-Flags: `--with-lynx` (Lynx-8B faithfulness, only if the adapter constructs) · `--local-obs` (obs SDKs on localhost instead of vendor hosted free tiers).
+Flags: `--with-lynx` (Lynx-8B faithfulness, only if the adapter constructs) · `--self-host` (obs SDKs on localhost; `--local-obs` is an alias).
+
+`openbundle attach` reprints the Claude Code / Cursor / Codex / Aider snippets for the current shell.
+
+## Attach a coding agent
+
+The sidecar is the only URL the agent should see. Set `OPENROUTER_API_KEY` (or a native Anthropic/OpenAI key) in the environment that runs `openbundle serve`.
+
+```powershell
+# Claude Code — this session, then `claude`
+$env:ANTHROPIC_BASE_URL = "http://127.0.0.1:4180"
+$env:ANTHROPIC_AUTH_TOKEN = "openbundle"
+$env:ANTHROPIC_API_KEY = ""
+```
+
+Cursor: Settings → Models → OpenAI-compatible. Base URL `http://127.0.0.1:4180/v1`, API key `openbundle`.
+
+Codex / other OpenAI CLIs: `OPENAI_BASE_URL=http://127.0.0.1:4180/v1` and `OPENAI_API_KEY=openbundle`.
+
+Do not point the agent at `openrouter.ai` if you want OpenBundle in the path. If Claude Code was logged into Anthropic, `/logout` once, restart, then `/status`.
 
 ## Pipeline order
 
@@ -84,7 +104,7 @@ Cache keys **original** messages. Compress only on miss. Scans before the reques
 ## The catalog
 
 <!-- CATALOG:START -->
-**23 live jobs** for hosted-API users, **4** more if self-hosted inference is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).
+**22 live jobs** for hosted-API users, **5** more if self-hosted inference or `--with-lynx` is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).
 <!-- CATALOG:END -->
 
 Not this proxy (kept in the full catalog / credits, not on the live path): coalesce, prompt-cache inject, session hygiene, serving engines, quantizers, token-level constrained decoding, vector DBs, orchestration frameworks.

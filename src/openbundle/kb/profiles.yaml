@@ -32,6 +32,7 @@ candidates:
     - semantic_router
   cost_route:
     - routellm
+    - prefix_router
   litellm:
     - litellm
   output_validate:

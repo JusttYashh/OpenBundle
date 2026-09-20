@@ -7,7 +7,7 @@ from typing import Any, AsyncIterator
 
 import httpx
 
-from openbundle.config import Settings, resolve_secret
+from openbundle.config import Settings, is_openrouter_url, resolve_secret
 from openbundle.pipeline.types import InternalRequest, InternalResponse, SSEEvent
 from openbundle.proxy.stream import assemble_from_events, parse_sse_chunk
 
@@ -41,11 +41,17 @@ class ProviderForwarder:
         if request.protocol == "anthropic":
             provider = self.settings.providers.anthropic
             url = provider.base_url.rstrip("/") + "/v1/messages"
+            key = resolve_secret(provider.api_key)
             headers = {
                 "content-type": "application/json",
-                "x-api-key": resolve_secret(provider.api_key),
                 "anthropic-version": request.headers.get("anthropic-version") or "2023-06-01",
             }
+            if is_openrouter_url(provider.base_url):
+                headers["authorization"] = f"Bearer {key}"
+                headers["x-api-key"] = key
+                headers.update(_openrouter_app_headers())
+            else:
+                headers["x-api-key"] = key
             if beta := request.headers.get("anthropic-beta"):
                 headers["anthropic-beta"] = beta
             body = dict(request.body)
@@ -67,6 +73,8 @@ class ProviderForwarder:
             "content-type": "application/json",
             "authorization": f"Bearer {key}" if key else request.headers.get("authorization", ""),
         }
+        if is_openrouter_url(provider.base_url):
+            headers.update(_openrouter_app_headers())
         body = dict(request.body)
         body["model"] = request.model
         body["messages"] = request.messages
@@ -275,6 +283,13 @@ class ProviderForwarder:
 async def iter_sse(response: InternalResponse) -> AsyncIterator[bytes]:
     for event in response.events:
         yield event.render().encode("utf-8")
+
+
+def _openrouter_app_headers() -> dict[str, str]:
+    return {
+        "HTTP-Referer": "https://github.com/openbundle/openbundle",
+        "X-Title": "OpenBundle",
+    }
 
 
 def _copy_headers(response: httpx.Response) -> dict[str, str]:

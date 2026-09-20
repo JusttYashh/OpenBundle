@@ -84,7 +84,12 @@ def test_config_lists_specific_skip_reasons(tmp_path: Path, monkeypatch):
     shown = runner.invoke(app, ["config", "--no-banner"])
     assert shown.exit_code == 0, shown.output
     assert "you add this yourself" in shown.stdout
-    assert "extra llmlingua not installed" in shown.stdout or "extra gptcache not installed" in shown.stdout
+    assert (
+        "extra presidio not installed" in shown.stdout
+        or "extra selective_context not installed" in shown.stdout
+        or "extra semantic_router not installed" in shown.stdout
+        or "extra llm_guard not installed" in shown.stdout
+    )
 
 
 def test_select_uses_installed_extras():

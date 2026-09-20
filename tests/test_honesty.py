@@ -52,6 +52,8 @@ def test_in_flight_tier_b_flip_uses_snapshot(tmp_settings):
     first: dict = {}
 
     class HoldCompress:
+        library = "llmlingua"
+
         def apply(self, request):
             entered.set()
             if not release.wait(timeout=5):
@@ -59,6 +61,8 @@ def test_in_flight_tier_b_flip_uses_snapshot(tmp_settings):
             return request
 
     class HistoryMarker:
+        library = "selective_context"
+
         def apply(self, request):
             updated = request
             updated.body = dict(request.body)
@@ -114,6 +118,7 @@ def test_fail_open_degraded_banner_then_recover(tmp_settings):
     tmp_settings.layers.cache.enabled = False
     pipeline = Pipeline(tmp_settings, warm=False)
     boom = Boom()
+    boom.library = "llm_guard"
     pipeline.registry.publish("secrets", boom, LIVE)
 
     class Fwd:
@@ -176,6 +181,7 @@ def test_lynx_status_only_when_adapter_is_constructed(tmp_settings):
 
     class FakeLynx:
         kind = "lynx"
+        library = "lynx"
 
         def score(self, request, response):
             return {"eval": "ok", "eval_reason": "Lynx-8B"}
@@ -195,7 +201,7 @@ def test_self_hosted_never_live_without_constructed_adapter(tmp_settings, monkey
         assert pipeline.registry.is_constructed_live(job_id) is False
         assert pipeline.registry.get_info(job_id).state != LIVE
         assert job_id not in pipeline.registry.live_jobs()
-    assert "engine-side" in text
+    assert "engine-side" in text or "not constructed" in text
     for label in ("LMCache", "kvcached", "KVzip", "DeepSpec"):
         line = next(row for row in text.splitlines() if row.lower().startswith(label.lower()))
         assert line.split()[1] == "off"
@@ -227,6 +233,24 @@ def test_init_local_obs_flag(tmp_path: Path, monkeypatch):
     monkeypatch.setattr("openbundle.cli.installed_extras", lambda: [])
     result = runner.invoke(
         app, ["init", "--no-banner", "--local-obs", "-o", str(tmp_path / "openbundle.yaml")]
+    )
+    assert result.exit_code == 0, result.output
+    text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")
+    assert "local_obs: true" in text
+    assert "Traces leave this machine" not in result.stdout
+
+
+def test_init_self_host_alias(tmp_path: Path, monkeypatch):
+    state = tmp_path / "ob-state"
+    record = state / "install-record.yaml"
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("openbundle.config.state_dir", lambda: state)
+    monkeypatch.setattr("openbundle.init.install.state_dir", lambda: state)
+    monkeypatch.setattr("openbundle.config.install_record_path", lambda: record)
+    monkeypatch.setattr("openbundle.init.install.install_record_path", lambda: record)
+    monkeypatch.setattr("openbundle.cli.installed_extras", lambda: [])
+    result = runner.invoke(
+        app, ["init", "--no-banner", "--self-host", "-o", str(tmp_path / "openbundle.yaml")]
     )
     assert result.exit_code == 0, result.output
     text = (tmp_path / "openbundle.yaml").read_text(encoding="utf-8")

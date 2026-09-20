@@ -34,6 +34,7 @@ def _text_of(content: Any) -> str | None:
 
 class CompressLayer:
     name = "compress"
+    library: str | None = None
 
     def __init__(self, config: CompressLayerConfig) -> None:
         self.config = config
