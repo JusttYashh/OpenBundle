@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="openbundle-logo-horizontal-centered.png" alt="openbundle" width="520">
+  <img src="https://raw.githubusercontent.com/JusttYashh/OpenBundle/main/openbundle-logo-horizontal-centered.png" alt="openbundle" width="520">
 </p>
 
 <p align="center">
@@ -10,13 +10,14 @@
 <p align="center"><code>openbundle status</code> — watch it happen, live, on your own traffic.</p>
 
 <p align="center">
-  <img src="docs/demo.svg" alt="openbundle init, a request, then status on real traffic">
+  <img src="https://raw.githubusercontent.com/JusttYashh/OpenBundle/main/docs/demo.png" alt="openbundle init, a request, then status on real traffic">
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
+  <a href="https://pypi.org/project/openbundle/"><img src="https://img.shields.io/pypi/v/openbundle.svg?style=flat-square" alt="PyPI"></a>
+  <a href="https://github.com/JusttYashh/OpenBundle/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat-square" alt="Python 3.11+"></a>
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow-status/openbundle/openbundle/ci.yml?branch=main&style=flat-square" alt="CI"></a>
+  <a href="https://github.com/JusttYashh/OpenBundle/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow-status/JusttYashh/OpenBundle/ci.yml?branch=main&style=flat-square" alt="CI"></a>
 </p>
 
 ## Honest caveats
@@ -110,7 +111,7 @@ This is job order, not a promise every name is live. A stage runs only if that l
 ## The catalog
 
 <!-- CATALOG:START -->
-**22 hosted-API jobs** for hosted-API users, **5** more if self-hosted inference or `--with-lynx` is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · credits: [CREDITS.md](CREDITS.md).
+**22 hosted-API jobs** for hosted-API users, **5** more if self-hosted inference or `--with-lynx` is detected, plus **8** advisory tools (memory + batch). `openbundle status` is the live number. Full table: [CATALOG.md](https://github.com/JusttYashh/OpenBundle/blob/main/CATALOG.md) · credits: [CREDITS.md](https://github.com/JusttYashh/OpenBundle/blob/main/CREDITS.md).
 <!-- CATALOG:END -->
 
 Not this proxy (kept in the full catalog / credits, not on the live path): coalesce, prompt-cache inject, session hygiene, serving engines, quantizers, token-level constrained decoding, vector DBs, orchestration frameworks.

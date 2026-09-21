@@ -21,7 +21,7 @@ from openbundle.proxy.openai_api import parse_openai
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
-    app = FastAPI(title="OpenBundle", version="0.1.0")
+    app = FastAPI(title="OpenBundle", version="0.1.1")
     app.state.settings = settings
     app.state.pipeline = Pipeline(settings)
     app.state.session = SessionLog(settings)

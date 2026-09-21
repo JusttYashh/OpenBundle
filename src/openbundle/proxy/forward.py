@@ -287,7 +287,7 @@ async def iter_sse(response: InternalResponse) -> AsyncIterator[bytes]:
 
 def _openrouter_app_headers() -> dict[str, str]:
     return {
-        "HTTP-Referer": "https://github.com/openbundle/openbundle",
+        "HTTP-Referer": "https://github.com/JusttYashh/OpenBundle",
         "X-Title": "OpenBundle",
     }
 

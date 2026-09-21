@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openbundle"
-version = "0.1.0"
+version = "0.1.1"
 description = "The compatibility layer for open-source AI optimization tools — auto-selects, wires, and shows before/after for the ones that work together."
 readme = "README.md"
 license = { text = "MIT" }
@@ -83,7 +83,7 @@ dev = [
 openbundle = "openbundle.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/openbundle/openbundle"
+Homepage = "https://github.com/JusttYashh/OpenBundle"
 
 [tool.setuptools.packages.find]
 where = ["src"]

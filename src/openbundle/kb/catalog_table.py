@@ -46,8 +46,8 @@ def render_readme_summary() -> str:
     return (
         f"**{hosted} hosted-API jobs** for hosted-API users, **{extra}** more if self-hosted "
         f"inference or `--with-lynx` is detected, plus **{advisory}** advisory tools (memory + batch). "
-        f"`openbundle status` is the live number. Full table: [CATALOG.md](CATALOG.md) · "
-        "credits: [CREDITS.md](CREDITS.md).\n"
+        f"`openbundle status` is the live number. Full table: [CATALOG.md](https://github.com/JusttYashh/OpenBundle/blob/main/CATALOG.md) · "
+        "credits: [CREDITS.md](https://github.com/JusttYashh/OpenBundle/blob/main/CREDITS.md).\n"
     )
 
 
