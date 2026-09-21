@@ -3,10 +3,11 @@
 </p>
 
 <p align="center">
-  <strong>You're paying for tokens you've already sent, prompts that still compress, and traffic you can't inspect.</strong>
+  <strong>Save up to 20× on prompt tokens. Repeat hits: $0 and local-ms — the provider never sees them.</strong><br>
+  22 open-source tools, wired into one stack, one install.
 </p>
 
-<p align="center">The open-source caches, compressors, scanners, routers, eval, and obs tools that fix that already exist. They just don't install as one localhost overlay.</p>
+<p align="center"><code>openbundle status</code> — watch it happen, live, on your own traffic.</p>
 
 <p align="center">
   <img src="docs/demo.svg" alt="openbundle init, a request, then status on real traffic">
